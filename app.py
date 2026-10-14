@@ -1,4 +1,4 @@
-"""Mujhe Pata Hai — menu bar app: an eye icon whose menu is just an on/off switch.
+"""Mujhe Pata Hai — menu bar app: an eye icon; the menu has an on/off switch and a voice picker.
 
 Run: python app.py          (use --on to start switched on)
 """
@@ -18,7 +18,10 @@ from AppKit import (
     NSAlert,
     NSApplication,
     NSApplicationActivationPolicyAccessory,
+    NSColor,
     NSFont,
+    NSFontAttributeName,
+    NSForegroundColorAttributeName,
     NSImage,
     NSMakeRect,
     NSMenu,
@@ -29,10 +32,11 @@ from AppKit import (
     NSVariableStatusItemLength,
     NSView,
 )
-from Foundation import NSObject, NSTimer
+from Foundation import NSAttributedString, NSObject, NSTimer
 from PyObjCTools import AppHelper
 
 import config
+from config import PERSONAS
 from engine import Engine
 from sarvam_client import SarvamClient, SarvamError
 
@@ -41,6 +45,7 @@ SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "MujhePataHai"
 PREFS_PATH = SUPPORT_DIR / "prefs.json"
 DEFAULT_PREFS: dict[str, Any] = {"persona": "mummy", "mode": "demo", "volume": 1.0, "screen": True, "enabled": False}
 MENU_WIDTH = 240
+VOICE_GROUPS = {"Home": ["mummy"], "Friends": ["dost"], "Filmy": ["filmy", "action", "commentator"]}
 
 
 # ------------------------------------------------------------------ prefs / key
@@ -79,6 +84,15 @@ class _Action(NSObject):
         self.cb(sender)
 
 
+def section_header(title: str) -> NSMenuItem:
+    """Small grey heading, like Rustyvibes' "Soundpack" / "Linear"."""
+    item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, None, "")
+    attrs = {NSFontAttributeName: NSFont.systemFontOfSize_weight_(11.5, 0.3), NSForegroundColorAttributeName: NSColor.secondaryLabelColor()}
+    item.setAttributedTitle_(NSAttributedString.alloc().initWithString_attributes_(title, attrs))
+    item.setEnabled_(False)
+    return item
+
+
 def eye_icon() -> NSImage:
     img = NSImage.imageWithSystemSymbolName_accessibilityDescription_("eye", APP_NAME)
     img.setTemplate_(True)  # monochrome, matches the other menu bar icons
@@ -109,7 +123,7 @@ class MenuBarApp:
         return action
 
     def _build_menu(self) -> NSMenu:
-        """The whole menu: the app's name and a switch."""
+        """The app's name + switch, then the voice picker."""
         head = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, MENU_WIDTH, 40))
         name = NSTextField.labelWithString_(APP_NAME)
         name.setFrame_(NSMakeRect(16, 10, 160, 20))
@@ -122,8 +136,36 @@ class MenuBarApp:
         item = NSMenuItem.alloc().init()
         item.setView_(head)
         menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
         menu.addItem_(item)
+        menu.addItem_(NSMenuItem.separatorItem())
+
+        menu.addItem_(section_header("Voice"))
+        self.voice_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", None, "")
+        voices = NSMenu.alloc().init()
+        voices.setAutoenablesItems_(False)
+        self.voice_items: dict[str, NSMenuItem] = {}
+        for i, (group, keys) in enumerate(VOICE_GROUPS.items()):
+            if i:
+                voices.addItem_(NSMenuItem.separatorItem())
+            voices.addItem_(section_header(group))
+            for key in keys:
+                p = PERSONAS[key]
+                v = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{p.emoji}  {p.title}", "fire:", "")
+                v.setTarget_(self._target(lambda _s, k=key: self.on_pick_voice(k)))
+                v.setToolTip_(p.tagline)
+                self.voice_items[key] = v
+                voices.addItem_(v)
+        self.voice_item.setSubmenu_(voices)
+        menu.addItem_(self.voice_item)
+        self._refresh_voice()
         return menu
+
+    def _refresh_voice(self) -> None:
+        p = PERSONAS[self.prefs["persona"]]
+        self.voice_item.setTitle_(f"{p.emoji}  {p.title}")
+        for key, item in self.voice_items.items():
+            item.setState_(int(key == self.prefs["persona"]))
 
     # ---------------------------------------------------------------- engine plumbing
     @property
@@ -165,6 +207,26 @@ class MenuBarApp:
         if self.engine:
             self.engine.stop()
 
+    def on_pick_voice(self, key: str) -> None:
+        self.prefs["persona"] = key
+        save_prefs(self.prefs)
+        self._refresh_voice()
+        if self.busy or not self._ensure_client():
+            return
+        self.busy = True
+        if self.running:
+            threading.Thread(target=self._start_engine, daemon=True).start()  # restart with the new voice
+        else:
+            threading.Thread(target=self._preview, args=(key,), daemon=True).start()
+
+    def _preview(self, key: str) -> None:
+        try:
+            self.engine.preview(key, self.prefs["volume"])
+        except Exception:
+            pass
+        finally:
+            self.busy = False
+
     def on_switch(self, sender) -> None:
         if sender.state():
             self.turn_on()
@@ -197,7 +259,7 @@ class MenuBarApp:
 
     # ---------------------------------------------------------------- main-thread tick
     def tick(self, _timer) -> None:
-        on = self.running or self.busy
+        on = self.running or (self.busy and self.prefs.get("enabled"))
         self.switch.setState_(int(on))
         self.status_item.button().setAlphaValue_(1.0 if on else 0.45)  # dimmed eye when off
 
