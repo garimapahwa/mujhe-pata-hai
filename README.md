@@ -22,7 +22,7 @@ Built for the **Sarvam Bulbul Build Challenge**. It uses only Sarvam AI models: 
 - 🖱 **Can't be fooled by mouse wiggling.** Scrolling YouTube counts as distraction. Only activity in a work app (VS Code, Terminal, docs…) counts as being back.
 - 📈 **Escalates with voice prosody.** Three levels using Bulbul's pace, pitch and loudness: teasing → annoyed → *full drama*.
 - 🎭 **Five characters.** Strict mummy, Gen-Z dost, live cricket commentator, a deep-voiced filmy narrator and a table-thumping action hero (all original, no celebrity voices).
-- 🍔 **Lives in the menu bar.** A minimal menu (on/off switch, voice picker, quit) plus a small animated buddy that floats on screen while it's on.
+- 👁 **Lives in the menu bar.** Just an eye icon; click it for an on/off switch. Nothing else.
 - ⚡ **Fast.** The first audio plays in about 100–200 ms, and common lines are pre-cached so the first nag is instant.
 - 🛟 **Never goes silent.** If the LLM is slow or down, a local keyword classifier and built-in line banks take over.
 - 📺 **Live terminal dashboard.** It shows state, idle and distraction timers, escalation level, what you said, detected intent, latency and a session tally.
@@ -55,7 +55,7 @@ cp .env.example .env
 #    open .env and set:  SARVAM_API_KEY=sk_...
 
 # 4. Run it
-python app.py     # menu bar app + floating buddy
+python app.py     # menu bar app (eye icon + on/off switch)
 python main.py    # or: terminal version with the full dashboard
 ```
 
@@ -193,9 +193,7 @@ The landing page lives in [`docs/`](docs) and is served by GitHub Pages: a one-s
 ## Project layout
 
 ```
-app.py            menu bar app: minimal native menu (on/off switch, voice picker, quit)
-buddy.py          floating, draggable on-screen character (transparent WebKit panel)
-buddy.html        the animated SVG buddy
+app.py            menu bar app: eye icon, menu with just an on/off switch
 engine.py         starts/stops the pipeline; voice validation and cache warm-up
 main.py           terminal version with the rich dashboard
 config.py         modes and timers, prosody levels, model IDs, personas

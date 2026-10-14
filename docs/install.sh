@@ -176,10 +176,10 @@ import plistlib, sys; p = sys.argv[1]
 plistlib.dump({'Label': 'com.mujhepatahai.agent', 'ProgramArguments': ['/usr/bin/open', '-a', sys.argv[2]], 'RunAtLoad': True}, open(p, 'wb'))" "$AGENT" "$APP"
 
 # ---------------------------------------------------------------- 6. launch
-open "$APP" --args --on   # start switched on so the buddy shows up right away
+open "$APP"
 cat <<DONE
 
-${green}${bold}  Ho gaya ✓${reset}  Click the ${bold}👁${reset} in your menu bar → choose a ${bold}Voice${reset} → flip the switch.
+${green}${bold}  Ho gaya ✓${reset}  Click the ${bold}👁${reset} in your menu bar and flip the switch.
   ${dim}Allow the microphone when macOS asks. Run this command again to update.${reset}
 
 DONE
