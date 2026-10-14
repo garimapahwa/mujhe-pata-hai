@@ -19,7 +19,6 @@ from AppKit import (
     NSApplicationActivationPolicyAccessory,
     NSColor,
     NSFont,
-    NSImage,
     NSMakeRect,
     NSMenu,
     NSMenuItem,
@@ -45,9 +44,9 @@ DEFAULT_PREFS: dict[str, Any] = {
     "persona": "mummy", "mode": "demo", "volume": 1.0, "screen": True, "show_buddy": True,
     "position": None, "enabled": False,
 }
-STATE_SYMBOLS = {
-    State.WORKING: "eye", State.IDLE: "eye.trianglebadge.exclamationmark", State.NAGGING: "exclamationmark.bubble.fill",
-    State.LISTENING: "mic.fill", State.RESPONDING: "ellipsis.bubble", State.SNOOZED: "hourglass",
+STATE_ICONS = {  # colourful emoji are easy to spot in a crowded menu bar
+    State.WORKING: "👀", State.IDLE: "👀", State.NAGGING: "😠",
+    State.LISTENING: "🎙", State.RESPONDING: "🤔", State.SNOOZED: "⏳",
 }
 MENU_WIDTH = 270
 
@@ -95,11 +94,6 @@ class _Action(NSObject):
         self.cb(sender)
 
 
-def symbol(name: str) -> Optional[NSImage]:
-    img = NSImage.imageWithSystemSymbolName_accessibilityDescription_(name, None)
-    if img is not None:
-        img.setTemplate_(True)
-    return img
 
 
 
@@ -128,7 +122,8 @@ class MenuBarApp:
         self._actions: list[_Action] = []  # keep ObjC targets alive
 
         self.status_item = NSStatusBar.systemStatusBar().statusItemWithLength_(NSVariableStatusItemLength)
-        self.status_item.button().setImage_(symbol("eye.slash"))
+        self.status_item.setAutosaveName_("MujhePataHai")  # macOS remembers where you ⌘-drag it
+        self._set_icon("👀", dim=True)
         self.status_item.button().setToolTip_(APP_NAME)
         self.menu = NSMenu.alloc().init()
         self.menu.setAutoenablesItems_(False)
@@ -312,25 +307,30 @@ class MenuBarApp:
             self.client.close()
         NSApplication.sharedApplication().terminate_(None)
 
+    def _set_icon(self, emoji: str, dim: bool = False) -> None:
+        button = self.status_item.button()
+        if button.title() != emoji:
+            button.setTitle_(emoji)
+        button.setAlphaValue_(0.5 if dim else 1.0)
+
     # ---------------------------------------------------------------- main-thread tick
     def tick(self, _timer) -> None:
         p = PERSONAS[self.prefs["persona"]]
         st = self.engine.status if self.engine else None
-        button = self.status_item.button()
         if self.busy and not self.running:
-            button.setImage_(symbol("hourglass"))
+            self._set_icon("⏳")
             if self.buddy and self.buddy.visible:
                 self.buddy.push_sleeping(p.key, self.preview_text)
             return
         if self.running and st:
-            button.setImage_(symbol(STATE_SYMBOLS.get(st.state, "eye")))
+            self._set_icon(STATE_ICONS.get(st.state, "👀"))
             self.switch.setState_(1)
             if self.buddy and self.buddy.visible:
                 if self.preview_text and not st.last_bot:
                     st.last_bot = self.preview_text
                 self.buddy.push(st)
             return
-        button.setImage_(symbol("eye.slash"))
+        self._set_icon("👀", dim=True)
         self.switch.setState_(0)
         if self.buddy and self.buddy.visible and not self.busy:
             self.buddy.hide()
