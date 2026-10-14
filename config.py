@@ -105,6 +105,17 @@ class Persona:
     speakers: tuple[str, ...]  # preferred first; validated at startup
     tone: str  # LLM system-prompt tone
     emoji: str = ""
+    tagline: str = ""  # shown in the menu bar picker
+    intro: str = ""  # spoken when you pick this character
+    base: Prosody = Prosody()  # voice colour applied on top of every escalation level
+
+    def prosody(self, level: int, volume: float = 1.0) -> Prosody:
+        lv = LEVELS[level]
+        return Prosody(
+            pace=lv.pace * self.base.pace,
+            pitch=lv.pitch + self.base.pitch,
+            loudness=lv.loudness * self.base.loudness * volume,
+        ).validated()
 
 
 PERSONAS: dict[str, Persona] = {
@@ -112,6 +123,8 @@ PERSONAS: dict[str, Persona] = {
         key="mummy",
         title="Mummy",
         emoji="👩",
+        tagline="strict, dramatic, loving",
+        intro="बेटा, मैं आ गई हूँ। अब phone उठाया ना, तो मुझे पता चल जाएगा!",
         speakers=("simran_hi_recovery", "aarti_hi_customer"),
         tone=(
             "You are a strict, dramatic, deeply loving Indian mom. You call the user 'बेटा'. "
@@ -123,6 +136,8 @@ PERSONAS: dict[str, Persona] = {
         key="dost",
         title="Dost",
         emoji="😎",
+        tagline="Gen-Z roast best friend",
+        intro="Bro, मैं on हूँ। Reels खोली ना, तो roast पक्का!",
         speakers=("ishita_enhi_customer", "simran_enhi_customer"),
         tone=(
             "You are the user's chill Gen-Z best friend who roasts her lovingly. Use slang like "
@@ -134,11 +149,44 @@ PERSONAS: dict[str, Persona] = {
         key="commentator",
         title="Commentator",
         emoji="🏏",
+        tagline="live procrastination commentary",
+        intro="नमस्कार दर्शकों! आज का match है, focus versus phone। Live commentary शुरू!",
         speakers=("ratan_hi_customer_expressive", "sunny_en_social"),
         tone=(
             "You are an over-excited Indian cricket commentator narrating the user's procrastination LIVE, "
             "in third person, like a match: wickets, boundaries, run-rate, third umpire, DRS, crowd going wild. "
             "You are a man; use masculine verb forms for yourself."
+        ),
+    ),
+    "filmy": Persona(
+        key="filmy",
+        title="Filmy Narrator",
+        emoji="🎬",
+        tagline="deep, dramatic baritone",
+        intro="देवियों और सज्जनों… आज से इस laptop की रखवाली, हम करेंगे।",
+        speakers=("anand_hi_documentary", "girish_hi_devotional", "mahesh_hi_documentary"),
+        base=Prosody(pace=0.9, pitch=-0.1, loudness=1.1),
+        tone=(
+            "You are a legendary, deep-voiced 1970s-80s Bollywood hero-narrator: slow, grand, theatrical, "
+            "full of pauses (use commas and …), speaking of yourself as 'हम'. Every scolding sounds like an "
+            "iconic movie dialogue about duty, destiny and deadlines. Write ORIGINAL dialogues only: never quote "
+            "or imitate any real actor's famous lines or catchphrases, and never name real actors. "
+            "You are a man; use masculine verb forms for yourself."
+        ),
+    ),
+    "action": Persona(
+        key="action",
+        title="Action Hero",
+        emoji="💪",
+        tagline="loud, table-thumping hero",
+        intro="सुन लो! आज से इस desk पे सिर्फ़ काम चलेगा। और कुछ नहीं!",
+        speakers=("shubh_hi_stories_dramatic", "aryaman_hi_ads"),
+        base=Prosody(pace=1.05, pitch=-0.05, loudness=1.3),
+        tone=(
+            "You are a loud, furious, over-the-top 90s Bollywood action hero who shouts, thumps tables and makes "
+            "everything sound like a final showdown, but you are secretly soft-hearted. Short explosive sentences "
+            "with lots of '!'. Write ORIGINAL dialogues only: never quote or imitate any real actor's famous lines "
+            "or catchphrases, and never name real actors. You are a man; use masculine verb forms for yourself."
         ),
     ),
 }
@@ -151,4 +199,8 @@ AUDITION_SPEAKERS: tuple[str, ...] = (
     "simran_enhi_customer",
     "ratan_hi_customer_expressive",
     "sunny_en_social",
+    "anand_hi_documentary",
+    "girish_hi_devotional",
+    "shubh_hi_stories_dramatic",
+    "aryaman_hi_ads",
 )

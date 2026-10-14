@@ -16,7 +16,7 @@ from typing import Callable, Iterator, Optional
 
 import config
 from audio import play_wav_bytes, play_wav_stream, record_utterance
-from config import LEVEL_MOODS, LEVELS, MAX_LEVEL, Persona, Prosody, Timings
+from config import LEVEL_MOODS, MAX_LEVEL, Persona, Prosody, Timings
 from idle import IdleMonitor
 from lines import BANKS, LineBank, excuse_topic
 from screen import ScreenContext, ScreenWatcher
@@ -63,6 +63,8 @@ class Status:
     lies: int = 0
     screen: str = ""
     distracted_s: float = 0.0
+    distraction: str = ""  # e.g. "YouTube" while one is in view
+    speaking: bool = False
     mic_level: float = 0.0
     countdown_until: float = 0.0
     tts_ms: Optional[int] = None
@@ -123,6 +125,7 @@ class Voice:
 
     def speak(self, text: str, prosody: Prosody, should_stop: Callable[[], bool]) -> bool:
         """Play `text`. Returns False if interrupted. Never raises on API/audio errors."""
+        self.status.speaking = True
         try:
             audio = self.cached(text, prosody)
             if audio is not None:
@@ -137,6 +140,8 @@ class Voice:
             self.status.log(f"[red]TTS error:[/] {err}")
         except Exception as err:  # audio device hiccups must not kill the demo
             self.status.log(f"[red]audio error:[/] {err}")
+        finally:
+            self.status.speaking = False
         return not should_stop()
 
     def _timed(self, chunks: Iterator[bytes], sink: list[bytes]) -> Iterator[bytes]:
@@ -251,6 +256,7 @@ class Brain:
         self._streak = 0
         self._last_excuse = ""
         self.watcher = watcher
+        self.volume = 1.0  # menu: Soft 0.6 / Normal 1.0 / Loud 1.4 (Bulbul loudness multiplier)
         self._screen = ScreenContext(app="")
         self._trigger = "idle"  # what started the current episode: "idle" | "distracted"
         self._fake_seen = threading.Event()  # mouse moved but the distraction is still focused
@@ -288,6 +294,9 @@ class Brain:
                 self._episode()
         except SystemExit:
             pass
+
+    def _prosody(self, level: int) -> Prosody:
+        return self.persona.prosody(level, self.volume)
 
     def _set(self, state: State) -> None:
         self.st.state = state
@@ -364,7 +373,7 @@ class Brain:
         self.st.last_bot = text
         self.st.trace(f"BOT: {text}")
         stop = self._stopped if interruptible else self.shutdown.is_set
-        self.voice.speak(text, LEVELS[self.st.level], stop)
+        self.voice.speak(text, self._prosody(self.st.level), stop)
         if interruptible:
             self._check()
 
@@ -449,6 +458,7 @@ class Brain:
         if not self.watcher:
             return self._screen
         self._screen = self.watcher.latest
+        self.st.distraction = self._screen.distraction or ""
         self.st.screen = self._screen.short()
         if self._screen.distraction:
             self.st.screen = f"🚨 {self.st.screen}"
@@ -499,7 +509,7 @@ class Brain:
             self._fake_called_out = True
             self.st.log(f"mouse moved, but {site} is still in focus — not buying it")
             line = self.bank.pick("fake_comeback").format(site=site)
-        self._bg.submit(self._safe_prefetch, line, LEVELS[self.st.level])
+        self._bg.submit(self._safe_prefetch, line, self._prosody(self.st.level))
         self._set(State.IDLE)
         self._countdown(self.t.escalation_gap)
         return line
@@ -532,7 +542,7 @@ class Brain:
             pass
         if not line or looks_romanized(line):
             line = self.bank.pick("followup").format(topic=excuse_topic(excuse))
-        self._safe_prefetch(line, LEVELS[self.st.level], persist=False)
+        self._safe_prefetch(line, self._prosody(self.st.level), persist=False)
         return line
 
     def _safe_prefetch(self, text: str, prosody: Prosody, persist: bool = True) -> None:
@@ -562,7 +572,7 @@ class Brain:
         line = self.bank.pick("welcome_back")
         self.st.last_bot = line
         self.st.trace(f"BOT: {line}")
-        self.voice.speak(line, LEVELS[1], self.shutdown.is_set)
+        self.voice.speak(line, self._prosody(1), self.shutdown.is_set)
         self._reset_after_return("keyboard/mouse activity → WORKING")
 
     def _reset_after_return(self, why: str) -> None:

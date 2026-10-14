@@ -4,3 +4,5 @@ python-dotenv>=1.0
 sounddevice>=0.5
 numpy>=1.26
 rich>=13.7
+pyobjc-framework-Cocoa>=10.0
+pyobjc-framework-WebKit>=10.0

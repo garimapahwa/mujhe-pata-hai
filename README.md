@@ -2,7 +2,12 @@
 
 **A voice focus buddy for macOS. It catches you slacking, nags you in Hinglish, listens to your excuse, and talks back.**
 
-> 🎬 _Demo video: coming soon_ <!-- drop demo.gif / YouTube link here -->
+🌐 **Website:** https://garimapahwa.github.io/mujhe-pata-hai · 🎬 _Demo video: coming soon_ <!-- drop demo.gif / YouTube link here -->
+
+```bash
+# install (macOS, no admin password) — the 👁 appears in your menu bar
+curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash
+```
 
 Go idle while you're supposed to be working and an Indian mummy calls you out, out loud. Answer her ("nahi nahi, padh rahi hoon") and she *understands* you, stays suspicious, and comes back later asking whether that reading is done yet. Claim you're studying while Taarak Mehta is playing in Chrome and she checks your screen: *"पढ़ाई? Screen पे तो Taarak Mehta चल रहा है! मुझे सब पता है।"* Stay silent and she gets louder, faster and more dramatic. Get back to real work and she stops mid-sentence: *"आ गई? Good. काम करो।"*
 
@@ -16,7 +21,8 @@ Built for the **Sarvam Bulbul Build Challenge**. It uses only Sarvam AI models: 
 - 👀 **Sees what's on screen.** It reads the focused app and the active Chrome/Safari tab, names what you're watching, and catches lies. It works across a second monitor too.
 - 🖱 **Can't be fooled by mouse wiggling.** Scrolling YouTube counts as distraction. Only activity in a work app (VS Code, Terminal, docs…) counts as being back.
 - 📈 **Escalates with voice prosody.** Three levels using Bulbul's pace, pitch and loudness: teasing → annoyed → *full drama*.
-- 🎭 **Three personas.** Strict mummy, Gen-Z dost, or a live cricket commentator.
+- 🎭 **Five characters.** Strict mummy, Gen-Z dost, live cricket commentator, a deep-voiced filmy narrator and a table-thumping action hero (all original, no celebrity voices).
+- 🍔 **Lives in the menu bar.** A toggle switch, character picker, volume slider and Launch at Login, plus a cute animated buddy that floats on screen while it's on.
 - ⚡ **Fast.** The first audio plays in about 100–200 ms, and common lines are pre-cached so the first nag is instant.
 - 🛟 **Never goes silent.** If the LLM is slow or down, a local keyword classifier and built-in line banks take over.
 - 📺 **Live terminal dashboard.** It shows state, idle and distraction timers, escalation level, what you said, detected intent, latency and a session tally.
@@ -29,6 +35,10 @@ Built for the **Sarvam Bulbul Build Challenge**. It uses only Sarvam AI models: 
 - Speakers and a microphone. The built-in ones work fine.
 
 ## Quick start
+
+**Easiest:** run the one-line installer above. It sets up Python, downloads the app, asks for your key and puts **Mujhe Pata Hai.app** in `~/Applications`. Run it again to update; add `-s -- --uninstall` after `bash` to remove it.
+
+**From source:**
 
 ```bash
 # 1. Get the code
@@ -45,7 +55,8 @@ cp .env.example .env
 #    open .env and set:  SARVAM_API_KEY=sk_...
 
 # 4. Run it
-python main.py
+python app.py     # menu bar app + floating buddy
+python main.py    # or: terminal version with the full dashboard
 ```
 
 Now take your hands off the keyboard and trackpad for 8 seconds. 🙂
@@ -97,6 +108,8 @@ Press **Ctrl+C** to quit.
 |---|---|---|
 | `mummy` (default) | `simran_hi_recovery` | Strict, dramatic, loving. *"मैंने इतनी मेहनत से पढ़ाया…"* |
 | `dost` | `ishita_enhi_customer` | Gen-Z roast. *"Bro… seriously? Reels?"* |
+| `filmy` | `anand_hi_documentary` (pitched down) | Deep, dramatic baritone. *"देवियों और सज्जनों… keyboard ख़ामोश है।"* |
+| `action` | `shubh_hi_stories_dramatic` | Loud, table-thumping hero. *"बस! अब मैं table तोड़ दूँगा!"* |
 | `commentator` | `ratan_hi_customer_expressive` | *"और ये गई focus boundary के पार! Phone ने एक और wicket लिया!"* |
 
 Voices are checked at startup. If Sarvam ever retires one, the app automatically picks the closest available voice (same language and style). To change a voice, edit `speakers` for that persona in `config.py`.
@@ -173,10 +186,18 @@ python -m audio           # record yourself, then hear it back
 python -m screen          # what the app sees (app + tab), 🚨 for distractions
 ```
 
+## Website
+
+The landing page lives in [`docs/`](docs) and is served by GitHub Pages: `index.html`, a copy of `buddy.html`, voice samples in `docs/audio/` (generated with Bulbul v4 Flash) and the installer `docs/install.sh`.
+
 ## Project layout
 
 ```
-main.py           CLI, voice validation, cache warm-up, live dashboard loop
+app.py            menu bar app: native menu (switch, character picker, volume slider), launch at login
+buddy.py          floating, draggable on-screen character (transparent WebKit panel)
+buddy.html        the animated SVG buddy (also used on the website)
+engine.py         starts/stops the pipeline; voice validation and cache warm-up
+main.py           terminal version with the rich dashboard
 config.py         modes and timers, prosody levels, model IDs, personas
 brain.py          state machine, intents, escalation, lie detection, TTS cache
 sarvam_client.py  Bulbul streaming TTS, Saaras STT, LLM (timeouts, retries)
