@@ -170,13 +170,7 @@ plistlib.dump({'Label': 'com.mujhepatahai.agent', 'ProgramArguments': ['/usr/bin
 open "$APP"
 cat <<DONE
 
-${green}${bold}  Ho gaya! ✓${reset}  Look for the ${bold}👁 eye${reset} in your menu bar (top right).
-
-  1. Click it → pick a ${bold}Character${reset} → flip the ${bold}switch${reset} on.
-  2. macOS will ask for ${bold}Microphone${reset} access (so she can hear your excuse). Allow it.
-  3. Go idle for 8 seconds… ${dim}मुझे पता है।${reset}
-
-  Update:    run the same command again
-  Uninstall: curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash -s -- --uninstall
+${green}${bold}  Ho gaya ✓${reset}  Click the ${bold}👁${reset} in your menu bar → choose a ${bold}Voice${reset} → flip the switch.
+  ${dim}Allow the microphone when macOS asks. Run this command again to update.${reset}
 
 DONE
