@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <style>
-  :root { --skin: #ffc9b5; --angry: #ff6b6b; --ink: #2b2118; --accent: #d90429; }
+  :root { --skin: #ffc9b5; --angry: #ff6b6b; --ink: #2e2c45; --accent: #c0485a; }
   html, body { margin: 0; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none;
     font-family: "Kohinoor Devanagari", -apple-system, "Helvetica Neue", sans-serif; cursor: default; }
   #stage { position: relative; width: 300px; height: 380px; }
@@ -38,9 +38,9 @@
   @keyframes shake { 25% { transform: translateX(-2px) rotate(-1deg); } 75% { transform: translateX(2px) rotate(1deg); } }
   @keyframes shake3 { 25% { transform: translateX(-5px) rotate(-2.5deg); } 75% { transform: translateX(5px) rotate(2.5deg); } }
 
-  .skin { fill: var(--skin); stroke: var(--ink); stroke-width: 3; transition: fill .4s; }
+  .skin { fill: var(--skin); stroke: var(--ink); stroke-width: 2.5; transition: fill .4s; filter: url(#grain); }
   .lvl-3.nagging #body, .lvl-3.nagging .arm .skin { fill: var(--angry); }
-  .stroke { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; }
+  .stroke { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
   .brow { transform-box: fill-box; transform-origin: center; transition: transform .25s; }
   .nagging #browL, .busted #browL { transform: translateY(3px) rotate(18deg); }
   .nagging #browR, .busted #browR { transform: translateY(3px) rotate(-18deg); }
@@ -51,7 +51,7 @@
   @keyframes blink { 0%, 95%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
   .pupil { transition: transform .3s; }
   .snoozed .pupil { transform: translateX(5px) scaleY(.55); }
-  .working .pupil { transform: scaleY(.9); }
+  .working .pupil { transform: translate(3px, 2px); }
   .eye-shine { fill: #fff; }
 
   .mouth { opacity: 0; transition: opacity .15s; }
@@ -101,6 +101,29 @@
     color: #ef233c; font-size: 26px; font-weight: 800; background: #fff8; transform: rotate(-14deg) scale(2); opacity: 0;
     transition: opacity .2s, transform .25s cubic-bezier(.2, 1.6, .5, 1); pointer-events: none; }
   .busted #stamp { opacity: 1; transform: rotate(-14deg) scale(1); }
+
+  /* ---------- minimal mode: just the character + a plain bubble ---------- */
+  #stage { width: 240px; height: 260px; }
+  #char { left: 60px; bottom: 4px; width: 120px; height: 120px; }
+  #bubble { left: 8px; right: 8px; bottom: 132px; padding: 8px 12px; border-radius: 12px; font-size: 14px; font-weight: 500;
+    background: #fff; color: #111; border: 1px solid #e5e5e5; box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+  #bubble::after { border-top-color: #fff; }
+  .lvl-2 #bubble, .lvl-3 #bubble { border-color: #e5e5e5; font-size: 14px; }
+  #bubble .you, #chip, #stamp, #hourglass, #waves, #dots, #steam, #belan { display: none !important; }
+
+  /* ---------- illustrated look: flat eyes, heavy-lidded "मुझे पता है" stare, grain ---------- */
+  .eye-shine { display: none; }
+  .lid-fill { fill: var(--skin); transition: fill .4s; }
+  .lvl-3.nagging .lid-fill { fill: var(--angry); }
+  .lid-line { fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; }
+  #lids { transition: transform .25s; }
+  .nagging #lids, .busted #lids { transform: translateY(-7px); }
+  .listening #lids { transform: translateY(-5px); }
+  .thinking #lids { transform: translateY(-3px); }
+  .snoozed #lids { transform: translateY(2px); }
+  #bubble { background: #f6efe9; color: #2e2c45; border: 2px solid #2e2c45; border-radius: 10px; box-shadow: none; font-weight: 500; }
+  #bubble::after { border-top-color: #2e2c45; }
+  .lvl-2 #bubble, .lvl-3 #bubble { border-color: #2e2c45; }
 </style>
 </head>
 <body>
@@ -108,58 +131,71 @@
   <div id="bubble"><span id="say"></span><span class="you" id="you"></span></div>
 
   <svg id="char" viewBox="0 0 200 200">
+    <defs><filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 .18  0 0 0 0 .17  0 0 0 0 .27  0 0 0 .22 0" result="g"/>
+      <feComposite in="g" in2="SourceGraphic" operator="in" result="gi"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="gi"/></feMerge>
+    </filter></defs>
     <g id="all">
-      <ellipse cx="100" cy="194" rx="56" ry="6" fill="#00000022"/>
+      <ellipse cx="100" cy="194" rx="56" ry="6" fill="#2e2c4520"/>
 
       <!-- behind the body -->
-      <g class="acc acc-mummy"><circle cx="100" cy="50" r="19" fill="#3b2a20" stroke="#2b2118" stroke-width="3"/>
-        <circle cx="113" cy="40" r="4" fill="#f4a261"/></g>
-      <g class="acc acc-filmy"><path d="M30 150 Q100 205 170 150 L176 176 Q100 214 24 176 Z" fill="#7b2cbf" stroke="#2b2118" stroke-width="3"/></g>
+      <g class="acc acc-mummy"><circle cx="100" cy="50" r="19" fill="#2e2c45" stroke="#2e2c45" stroke-width="3"/>
+        <circle cx="113" cy="40" r="4" fill="#e3a07a"/></g>
+      <g class="acc acc-filmy"><path d="M30 150 Q100 205 170 150 L176 176 Q100 214 24 176 Z" fill="#a58aae" stroke="#2e2c45" stroke-width="3"/></g>
 
       <g id="armL" class="arm"><ellipse class="skin" cx="34" cy="142" rx="14" ry="19"/></g>
       <g id="armR" class="arm">
         <ellipse class="skin" cx="166" cy="142" rx="14" ry="19"/>
-        <g id="belan" class="acc acc-mummy"><rect x="150" y="96" width="12" height="54" rx="6" fill="#d4a373" stroke="#2b2118" stroke-width="3" transform="rotate(25 156 123)"/></g>
+        <g id="belan" class="acc acc-mummy"><rect x="150" y="96" width="12" height="54" rx="6" fill="#d9b48c" stroke="#2e2c45" stroke-width="3" transform="rotate(25 156 123)"/></g>
       </g>
 
       <path id="body" class="skin" d="M100 56 C150 56 172 98 172 136 C172 174 140 190 100 190 C60 190 28 174 28 136 C28 98 50 56 100 56 Z"/>
 
       <!-- hair / headwear -->
-      <g class="acc acc-mummy"><path d="M48 92 C52 62 80 54 100 56 C122 54 150 62 152 92 C134 76 116 74 100 76 C84 74 66 76 48 92 Z" fill="#3b2a20"/></g>
-      <g class="acc acc-filmy"><path d="M46 92 C50 58 84 52 104 56 C132 56 154 70 154 96 C140 80 122 72 98 74 C80 76 62 80 46 92 Z" fill="#1f1f1f"/></g>
+      <g class="acc acc-mummy"><path d="M48 92 C52 62 80 54 100 56 C122 54 150 62 152 92 C134 76 116 74 100 76 C84 74 66 76 48 92 Z" fill="#2e2c45"/></g>
+      <g class="acc acc-filmy"><path d="M46 92 C50 58 84 52 104 56 C132 56 154 70 154 96 C140 80 122 72 98 74 C80 76 62 80 46 92 Z" fill="#2e2c45"/></g>
       <g class="acc acc-dost">
-        <path d="M44 82 C52 52 148 52 156 82 Z" fill="#06d6a0" stroke="#2b2118" stroke-width="3"/>
-        <rect x="132" y="74" width="40" height="9" rx="4" fill="#06d6a0" stroke="#2b2118" stroke-width="3"/>
+        <path d="M44 82 C52 52 148 52 156 82 Z" fill="#d48c93" stroke="#2e2c45" stroke-width="3"/>
+        <rect x="132" y="74" width="40" height="9" rx="4" fill="#d48c93" stroke="#2e2c45" stroke-width="3"/>
       </g>
       <g class="acc acc-action">
-        <rect x="34" y="78" width="132" height="13" rx="5" fill="#ef233c" stroke="#2b2118" stroke-width="3"/>
-        <path d="M164 84 L186 74 L182 92 Z M164 86 L188 100 L174 104 Z" fill="#ef233c" stroke="#2b2118" stroke-width="2.5"/>
+        <rect x="34" y="78" width="132" height="13" rx="5" fill="#c96a71" stroke="#2e2c45" stroke-width="3"/>
+        <path d="M164 84 L186 74 L182 92 Z M164 86 L188 100 L174 104 Z" fill="#c96a71" stroke="#2e2c45" stroke-width="2.5"/>
       </g>
       <g class="acc acc-commentator">
-        <path d="M40 120 C36 60 164 60 160 120" fill="none" stroke="#2b2118" stroke-width="6"/>
-        <rect x="30" y="108" width="16" height="28" rx="6" fill="#118ab2" stroke="#2b2118" stroke-width="3"/>
-        <rect x="154" y="108" width="16" height="28" rx="6" fill="#118ab2" stroke="#2b2118" stroke-width="3"/>
-        <path d="M40 132 Q50 160 80 156" fill="none" stroke="#2b2118" stroke-width="4"/><circle cx="82" cy="156" r="6" fill="#2b2118"/>
+        <path d="M40 120 C36 60 164 60 160 120" fill="none" stroke="#2e2c45" stroke-width="6"/>
+        <rect x="30" y="108" width="16" height="28" rx="6" fill="#8796bb" stroke="#2e2c45" stroke-width="3"/>
+        <rect x="154" y="108" width="16" height="28" rx="6" fill="#8796bb" stroke="#2e2c45" stroke-width="3"/>
+        <path d="M40 132 Q50 160 80 156" fill="none" stroke="#2e2c45" stroke-width="4"/><circle cx="82" cy="156" r="6" fill="#2e2c45"/>
       </g>
 
       <!-- face -->
+      <g id="eyes">
+        <g class="pupil"><ellipse cx="78" cy="114" rx="8" ry="10" fill="#2e2c45"/><circle class="eye-shine" cx="81" cy="110" r="2.6"/></g>
+        <g class="pupil"><ellipse cx="122" cy="114" rx="8" ry="10" fill="#2e2c45"/><circle class="eye-shine" cx="125" cy="110" r="2.6"/></g>
+      </g>
+      <g id="lids">
+        <rect class="lid-fill" x="67" y="100" width="22" height="10"/><path class="lid-line" d="M68.5 110 Q78 108.5 87.5 110"/>
+        <rect class="lid-fill" x="111" y="100" width="22" height="10"/><path class="lid-line" d="M112.5 110 Q122 108.5 131.5 110"/>
+      </g>
       <path id="browL" class="brow stroke" d="M64 98 Q76 91 88 97"/>
       <path id="browR" class="brow stroke" d="M112 97 Q124 91 136 98"/>
-      <g id="eyes">
-        <g class="pupil"><ellipse cx="78" cy="114" rx="8" ry="10" fill="#2b2118"/><circle class="eye-shine" cx="81" cy="110" r="2.6"/></g>
-        <g class="pupil"><ellipse cx="122" cy="114" rx="8" ry="10" fill="#2b2118"/><circle class="eye-shine" cx="125" cy="110" r="2.6"/></g>
+      <g class="acc acc-mummy" fill="none" stroke="#2e2c45" stroke-width="2.4">
+        <circle cx="78" cy="114" r="14"/><circle cx="122" cy="114" r="14"/><path d="M92 112 Q100 107 108 112"/>
       </g>
-      <g class="acc acc-dost"><rect x="62" y="86" width="30" height="11" rx="5" fill="#111"/><rect x="108" y="86" width="30" height="11" rx="5" fill="#111"/><path d="M92 91 L108 91" stroke="#111" stroke-width="3"/></g>
-      <ellipse cx="62" cy="132" rx="9" ry="6" fill="#ff8fa3" opacity=".55"/>
-      <ellipse cx="138" cy="132" rx="9" ry="6" fill="#ff8fa3" opacity=".55"/>
-      <circle class="acc acc-mummy" cx="100" cy="91" r="4" fill="#d90429"/>
+      <g class="acc acc-dost"><rect x="62" y="86" width="30" height="11" rx="5" fill="#2e2c45"/><rect x="108" y="86" width="30" height="11" rx="5" fill="#2e2c45"/><path d="M92 91 L108 91" stroke="#2e2c45" stroke-width="3"/></g>
+      <ellipse cx="62" cy="132" rx="9" ry="6" fill="#d9828b" opacity=".42"/>
+      <ellipse cx="138" cy="132" rx="9" ry="6" fill="#d9828b" opacity=".42"/>
+      <circle class="acc acc-mummy" cx="100" cy="91" r="4" fill="#c0485a"/>
 
       <path id="mSmile" class="mouth stroke" d="M86 140 Q100 152 114 140"/>
       <path id="mFlat" class="mouth stroke" d="M88 145 L112 143"/>
       <path id="mFrown" class="mouth stroke" d="M86 149 Q100 137 114 149"/>
-      <ellipse id="mO" class="mouth" cx="100" cy="145" rx="6" ry="7" fill="#2b2118"/>
-      <ellipse id="mTalk" class="mouth" cx="100" cy="145" rx="11" ry="9" fill="#6b1d1d" stroke="#2b2118" stroke-width="3"/>
-      <g class="acc acc-filmy"><path d="M78 134 Q90 126 100 133 Q110 126 122 134 Q112 140 100 136 Q88 140 78 134 Z" fill="#1f1f1f"/></g>
+      <ellipse id="mO" class="mouth" cx="100" cy="145" rx="6" ry="7" fill="#2e2c45"/>
+      <ellipse id="mTalk" class="mouth" cx="100" cy="145" rx="11" ry="9" fill="#8c3f4a" stroke="#2e2c45" stroke-width="3"/>
+      <g class="acc acc-filmy"><path d="M78 134 Q90 126 100 133 Q110 126 122 134 Q112 140 100 136 Q88 140 78 134 Z" fill="#2e2c45"/></g>
 
       <!-- effects -->
       <g id="waves"><path class="wave" d="M182 92 Q190 102 182 112"/><path class="wave" d="M190 84 Q202 102 190 120"/></g>
@@ -174,7 +210,7 @@
 </div>
 
 <script>
-  const SKIN = { mummy: "#ffc9b5", dost: "#a0e7e5", commentator: "#b5ead7", filmy: "#f6d186", action: "#ffb3a7" };
+  const SKIN = { mummy: "#e8b593", dost: "#b3b4d9", commentator: "#bccdb0", filmy: "#e2c08f", action: "#dd9a92" };
   const stage = document.getElementById("stage");
   let lastText = "", textShownAt = 0, bustedUntil = 0;
 

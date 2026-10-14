@@ -4,54 +4,45 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>मुझे पता है</title>
-<meta name="description" content="Your Mac's Hinglish focus buddy.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👀</text></svg>">
 <style>
-  :root { --bg: #fff; --fg: #111; --muted: #888; --box: #f4f4f4; --line: #e5e5e5; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #111; --fg: #eee; --muted: #777; --box: #1d1d1d; --line: #2a2a2a; } }
+  :root { --navy: #2e2c45; --cream: #f1e9e2; --frame: #e4d9d3; --pink: #d6787f; }
   * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center;
-    background: var(--bg); color: var(--fg); font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Kohinoor Devanagari", sans-serif; }
-  main { width: 100%; max-width: 600px; padding: 24px 20px; text-align: center; }
-  h1 { font-size: 44px; font-weight: 600; margin: 0; }
-  p { color: var(--muted); margin: 6px 0 36px; }
-  .cmd { display: flex; align-items: center; gap: 10px; background: var(--box); border-radius: 10px; padding: 12px 12px 12px 16px; text-align: left; }
-  .cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 14px ui-monospace, Menlo, monospace; scrollbar-width: none; }
-  button { font: inherit; color: var(--fg); background: none; cursor: pointer; }
-  .copy { flex: none; border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; font-size: 13px; }
-  .voices { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; margin-top: 28px; }
-  .voices button { border: 0; padding: 0; font-size: 15px; color: var(--muted); }
-  .voices button:hover, .voices button.on { color: var(--fg); }
+  body { margin: 0; min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; color: var(--navy);
+    background: var(--cream) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .18 0 0 0 0 .17 0 0 0 0 .27 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    font: 15px -apple-system, BlinkMacSystemFont, "Kohinoor Devanagari", sans-serif; }
+  .win { width: min(640px, calc(100vw - 32px)); border: 2px solid var(--navy); border-radius: 10px; background: var(--frame); overflow: hidden; }
+  .bar { position: relative; height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-bottom: 2px solid var(--navy); }
+  .bar i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--navy); }
+  .bar i:nth-child(1) { background: #d6787f; } .bar i:nth-child(2) { background: #e3c08f; } .bar i:nth-child(3) { background: #a9bf9f; }
+  .bar b { position: absolute; left: 0; right: 0; text-align: center; font-weight: 600; font-size: 14px; pointer-events: none; }
+  .screen { position: relative; aspect-ratio: 16 / 10; background: var(--pink); border-bottom: 2px solid var(--navy); overflow: hidden; cursor: pointer;
+    background-image: linear-gradient(transparent 82%, rgba(46,44,69,.08) 82%); }
+  .screen iframe { position: absolute; left: 50%; bottom: -8px; width: 240px; height: 260px; border: 0; background: transparent;
+    transform: translateX(-50%) scale(1.25); transform-origin: 50% 100%; pointer-events: none; }
+  .foot { padding: 14px; }
+  .cmd { display: block; width: 100%; border: 2px solid var(--navy); border-radius: 8px; background: var(--cream); color: var(--navy); padding: 10px 12px;
+    font: 12.5px ui-monospace, Menlo, monospace; text-align: left; white-space: nowrap; overflow-x: auto; cursor: pointer; scrollbar-width: none; }
 </style>
 </head>
 <body>
-<main>
-  <h1>मुझे पता है</h1>
-  <p>your Mac's Hinglish focus buddy</p>
-  <div class="cmd"><code id="cmd">curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash</code><button class="copy" id="copy">Copy</button></div>
-  <div class="voices">
-    <button data-src="audio/mummy.mp3">▶ Mummy</button>
-    <button data-src="audio/dost.mp3">▶ Dost</button>
-    <button data-src="audio/commentator.mp3">▶ Commentator</button>
-    <button data-src="audio/filmy.mp3">▶ Filmy</button>
-    <button data-src="audio/action.mp3">▶ Action</button>
+  <div class="win">
+    <div class="bar"><i></i><i></i><i></i><b>मुझे पता है</b></div>
+    <div class="screen" id="screen" title="Click her"><iframe id="buddy" src="buddy.html?persona=mummy" title="Mummy"></iframe></div>
+    <div class="foot"><button class="cmd" id="cmd" title="Click to copy">curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash</button></div>
   </div>
-</main>
 <script>
-  const audio = new Audio();
-  let current = null;
-  const reset = () => { if (current) { current.classList.remove("on"); current.textContent = current.textContent.replace("■", "▶"); } current = null; };
-  document.querySelectorAll(".voices button").forEach(b => b.addEventListener("click", () => {
-    if (current === b) { audio.pause(); reset(); return; }
-    reset(); audio.src = b.dataset.src; audio.play();
-    b.classList.add("on"); b.textContent = b.textContent.replace("▶", "■"); current = b;
-  }));
-  audio.addEventListener("ended", reset);
-  document.getElementById("copy").addEventListener("click", async e => {
-    const b = e.currentTarget;
-    try { await navigator.clipboard.writeText(document.getElementById("cmd").textContent); b.textContent = "Copied"; } catch { b.textContent = "⌘C"; }
-    setTimeout(() => (b.textContent = "Copy"), 1500);
+  const cmd = document.getElementById("cmd"), text = cmd.textContent;
+  cmd.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(text); cmd.textContent = "copied — paste it in Terminal"; setTimeout(() => (cmd.textContent = text), 1500); } catch {}
   });
+  const audio = new Audio("audio/mummy.mp3"), buddy = document.getElementById("buddy");
+  const say = s => buddy.contentWindow.postMessage(s, "*");
+  document.getElementById("screen").addEventListener("click", () => {
+    audio.currentTime = 0; audio.play();
+    say({ state: "NAGGING", speaking: true, text: "क्या चल रहा है बेटा? Phone चला रही हो? मुझे पता है…" });
+  });
+  audio.addEventListener("ended", () => say({ state: "WORKING", text: "" }));
 </script>
 </body>
 </html>

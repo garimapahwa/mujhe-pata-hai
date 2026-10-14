@@ -26,7 +26,7 @@ from WebKit import WKUserContentController, WKWebView, WKWebViewConfiguration
 from brain import State, Status
 
 HTML = Path(__file__).with_name("buddy.html")
-WIDTH, HEIGHT = 300, 380
+WIDTH, HEIGHT = 240, 260
 _FLOATING_LEVEL = 3  # NSFloatingWindowLevel
 
 WKScriptMessageHandler = objc.protocolNamed("WKScriptMessageHandler")
