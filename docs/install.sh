@@ -130,11 +130,20 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>NSAppleEventsUsageDescription</key><string>Reads the title of your active Chrome/Safari tab to check if you're really studying.</string>
 </dict></plist>
 PLIST
+# Run Python from *inside* the bundle so macOS treats the process as "Mujhe Pata Hai" (not "Python"):
+# that's what makes the menu bar icon show up and the microphone prompt name the app.
+FRAMEWORK_PY="$("$VENV/bin/python" -c 'import os, sys; print(os.path.join(sys.base_prefix, "Resources/Python.app/Contents/MacOS/Python"))')"
+if [[ -x "$FRAMEWORK_PY" ]]; then
+  cp "$FRAMEWORK_PY" "$APP/Contents/MacOS/MujhePataHai"
+  RUNNER='export __PYVENV_LAUNCHER__="'"$VENV/bin/python"'"; exec "$(dirname "$0")/MujhePataHai"'
+else
+  RUNNER='exec "'"$VENV/bin/python"'"'
+fi
 cat > "$APP/Contents/MacOS/mujhe-pata-hai" <<LAUNCHER
 #!/bin/bash
 export MPH_APP_BUNDLE="$APP"
 cd "$SRC"
-exec "$VENV/bin/python" "$SRC/app.py" "\$@"
+$RUNNER "$SRC/app.py" "\$@"
 LAUNCHER
 chmod +x "$APP/Contents/MacOS/mujhe-pata-hai"
 

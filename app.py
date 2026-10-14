@@ -336,7 +336,23 @@ class MenuBarApp:
             self.buddy.hide()
 
 
+def already_running() -> bool:
+    """Single instance: hold an exclusive lock for the app's lifetime."""
+    import fcntl
+
+    PREFS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    global _LOCK
+    _LOCK = open(PREFS_PATH.parent / "app.lock", "w")
+    try:
+        fcntl.flock(_LOCK, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return False
+    except OSError:
+        return True
+
+
 def main() -> None:
+    if already_running():
+        return
     app = NSApplication.sharedApplication()
     app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)  # menu bar only, no Dock icon
     menubar = MenuBarApp()
