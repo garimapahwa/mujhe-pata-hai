@@ -73,18 +73,26 @@ def save_api_key(key: str) -> None:
 
 
 # ------------------------------------------------------------------ launch at login / icon position
+def _agent() -> dict[str, Any]:
+    try:
+        return plistlib.loads(LOGIN_AGENT.read_bytes())
+    except (OSError, ValueError):
+        return {}
+
+
 def launch_at_login() -> bool:
-    return LOGIN_AGENT.exists()
+    return bool(_agent().get("RunAtLoad"))
 
 
 def set_launch_at_login(on: bool) -> None:
-    if not on:
-        LOGIN_AGENT.unlink(missing_ok=True)
-        return
-    bundle = os.environ.get("MPH_APP_BUNDLE", "")
-    args = ["/usr/bin/open", "-a", bundle] if bundle.endswith(".app") else [sys.executable, str(config.ROOT / "app.py")]
+    """The installer's launchd job starts the app; this only flips whether it also runs at login."""
+    agent = _agent()
+    if not agent:  # running from source: create a job that runs this checkout
+        agent = {"Label": "com.mujhepatahai.agent", "ProgramArguments": [sys.executable, str(config.ROOT / "app.py")],
+                 "EnvironmentVariables": {"MPH_VIA_LAUNCHD": "1"}}
+    agent["RunAtLoad"] = on
     LOGIN_AGENT.parent.mkdir(parents=True, exist_ok=True)
-    LOGIN_AGENT.write_bytes(plistlib.dumps({"Label": "com.mujhepatahai.agent", "ProgramArguments": args, "RunAtLoad": True}))
+    LOGIN_AGENT.write_bytes(plistlib.dumps(agent))
 
 
 def place_icon_on_the_right(prefs: dict[str, Any]) -> None:
@@ -94,8 +102,6 @@ def place_icon_on_the_right(prefs: dict[str, Any]) -> None:
         return
     NSUserDefaults.standardUserDefaults().setDouble_forKey_(100.0, f"NSStatusItem Preferred Position {STATUS_NAME}")
     prefs["icon_placed"] = True
-    if not launch_at_login():  # first run: start with the Mac by default, like Rustyvibes
-        set_launch_at_login(True)
     save_prefs(prefs)
 
 

@@ -30,6 +30,7 @@ quit_running_app() {
 
 uninstall() {
   say "Removing ${APP_NAME}…"
+  launchctl bootout "gui/$(id -u)/com.mujhepatahai.agent" 2>/dev/null || true
   quit_running_app
   rm -rf "$APP" "$SUPPORT"
   rm -f "$AGENT"
@@ -141,6 +142,13 @@ else
 fi
 cat > "$APP/Contents/MacOS/mujhe-pata-hai" <<LAUNCHER
 #!/bin/bash
+# Opened from Finder/Spotlight? Hand off to launchd: macOS 26 only shows the menu bar icon
+# of this (non-notarized) app when launchd starts it.
+if [[ -z "\$MPH_VIA_LAUNCHD" ]]; then
+  launchctl kickstart "gui/\$(id -u)/com.mujhepatahai.agent" 2>/dev/null \\
+    || { launchctl bootstrap "gui/\$(id -u)" "$AGENT" 2>/dev/null; launchctl kickstart "gui/\$(id -u)/com.mujhepatahai.agent"; }
+  exit 0
+fi
 export MPH_APP_BUNDLE="$APP"
 cd "$SRC"
 $RUNNER "$SRC/app.py" "\$@"
@@ -170,13 +178,24 @@ ICON
 codesign --force --deep --sign - "$APP" >/dev/null 2>&1 || true
 ok "Installed ${dim}$APP${reset}"
 
-# keep "Launch at Login" pointing at the new bundle
-[[ -f "$AGENT" ]] && "$VENV/bin/python" -c "
-import plistlib, sys; p = sys.argv[1]
-plistlib.dump({'Label': 'com.mujhepatahai.agent', 'ProgramArguments': ['/usr/bin/open', '-a', sys.argv[2]], 'RunAtLoad': True}, open(p, 'wb'))" "$AGENT" "$APP"
-
-# ---------------------------------------------------------------- 6. launch
-open "$APP"
+# ---------------------------------------------------------------- 6. start with launchd (now and at every login)
+"$VENV/bin/python" - "$AGENT" "$APP/Contents/MacOS/mujhe-pata-hai" <<'AGENTPY'
+import plistlib, sys, os
+path, launcher = sys.argv[1], sys.argv[2]
+run_at_load = True
+if os.path.exists(path):  # keep the user's "Launch at Login" choice
+    try:
+        run_at_load = plistlib.load(open(path, "rb")).get("RunAtLoad", True)
+    except Exception:
+        pass
+os.makedirs(os.path.dirname(path), exist_ok=True)
+plistlib.dump({"Label": "com.mujhepatahai.agent", "ProgramArguments": [launcher],
+               "EnvironmentVariables": {"MPH_VIA_LAUNCHD": "1"}, "RunAtLoad": run_at_load,
+               "ProcessType": "Interactive"}, open(path, "wb"))
+AGENTPY
+launchctl bootout "gui/$(id -u)/com.mujhepatahai.agent" 2>/dev/null || true
+launchctl bootstrap "gui/$(id -u)" "$AGENT"
+launchctl kickstart "gui/$(id -u)/com.mujhepatahai.agent" 2>/dev/null || true
 cat <<DONE
 
 ${green}${bold}  Ho gaya ✓${reset}  Click the ${bold}👁${reset} in your menu bar and flip the switch.
