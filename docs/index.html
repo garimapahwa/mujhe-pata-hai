@@ -7,80 +7,78 @@
 <meta name="description" content="A Hinglish voice focus buddy for your Mac menu bar. Powered by Sarvam AI.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👀</text></svg>">
 <style>
-  :root { --bg: #fbfaf7; --fg: #1c1917; --muted: #78716c; --line: #e7e5e4; --term: #1c1917; --accent: #e63e8c; }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #141210; --fg: #f5f5f4; --muted: #a8a29e; --line: #292524; --term: #0c0a09; }
-  }
+  :root { --bg: #fff; --fg: #111; --muted: #777; --line: #eaeaea; --code: #f5f5f5; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #111; --fg: #eee; --muted: #888; --line: #262626; --code: #1c1c1c; } }
   * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; background: var(--bg); color: var(--fg);
-    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Kohinoor Devanagari", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
-  main { width: 100%; max-width: 660px; padding: 48px 20px; }
-  @media (max-width: 500px) { h1 { font-size: 28px; } h1 span { display: block; } }
-  .buddy { width: 150px; height: 190px; margin: 0 0 4px -26px; overflow: hidden; position: relative; }
-  .buddy iframe { position: absolute; left: 0; bottom: 0; width: 300px; height: 380px; border: 0; background: transparent;
-    transform: scale(.5); transform-origin: 0 100%; pointer-events: none; }
-  h1 { font-size: 34px; line-height: 1.2; margin: 0 0 6px; font-weight: 700; letter-spacing: -.3px; }
-  h1 span { color: var(--muted); font-weight: 500; }
-  .lead { color: var(--muted); margin: 0 0 32px; }
-  .term { background: var(--term); border-radius: 12px; padding: 16px 16px 16px 18px; display: flex; align-items: center; gap: 12px; }
-  .term code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; color: #f5f5f4; font: 14px/1.5 ui-monospace, "SF Mono", Menlo, monospace; scrollbar-width: none; }
-  .term code::before { content: "$ "; color: #78716c; }
-  button.copy { flex: none; border: 1px solid #44403c; background: transparent; color: #f5f5f4; border-radius: 8px; padding: 6px 12px;
-    font: 13px -apple-system, sans-serif; cursor: pointer; }
-  button.copy:hover { border-color: #a8a29e; }
-  .hint { font-size: 14px; color: var(--muted); margin: 10px 2px 36px; }
-  ol { margin: 0; padding: 0; list-style: none; counter-reset: s; border-top: 1px solid var(--line); }
-  li { counter-increment: s; padding: 14px 0 14px 34px; border-bottom: 1px solid var(--line); position: relative; }
-  li::before { content: counter(s); position: absolute; left: 0; top: 14px; width: 22px; height: 22px; border-radius: 50%;
-    border: 1px solid var(--line); font-size: 12px; display: grid; place-items: center; color: var(--muted); }
-  li b { font-weight: 600; }
-  .play { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; }
-  footer { margin-top: 36px; font-size: 14px; color: var(--muted); }
-  footer a { color: inherit; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Kohinoor Devanagari", "Segoe UI", sans-serif; }
+  main { max-width: 620px; margin: 0 auto; padding: 64px 20px 80px; }
+  h1 { font-size: 26px; margin: 0 0 4px; font-weight: 600; }
+  h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 48px 0 12px; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+  .row { display: flex; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .row:first-of-type { border-top: 1px solid var(--line); }
+  .row .name { width: 150px; flex: none; font-weight: 500; }
+  .row .desc { flex: 1; color: var(--muted); }
+  button.play { flex: none; background: none; border: 0; padding: 0; color: var(--fg); font: inherit; font-size: 14px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  ol { margin: 0; padding-left: 20px; } ol li { padding: 4px 0; }
+  .cmd { display: flex; gap: 10px; align-items: center; background: var(--code); border-radius: 8px; padding: 10px 12px; margin: 8px 0 4px; }
+  .cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 13.5px ui-monospace, Menlo, monospace; }
+  .cmd button { flex: none; background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 6px; padding: 3px 10px; font: 13px -apple-system, sans-serif; cursor: pointer; }
+  a { color: inherit; }
+  footer { margin-top: 48px; font-size: 14px; color: var(--muted); }
   footer code { font: 12.5px ui-monospace, Menlo, monospace; }
+  @media (max-width: 520px) { .row { flex-wrap: wrap; gap: 2px 12px; } .row .name { width: auto; } .row .desc { flex-basis: 100%; order: 3; } }
 </style>
 </head>
 <body>
 <main>
-  <div class="buddy"><iframe src="buddy.html?persona=mummy" title="Mummy" id="buddy"></iframe></div>
-  <h1>मुझे पता है <span>· Mujhe Pata Hai</span></h1>
-  <p class="lead">A voice buddy in your Mac's menu bar. Slack off and she catches you, in Hinglish.
-    <button class="play" id="play">▶ Hear her</button></p>
+  <h1>Mujhe Pata Hai</h1>
+  <p class="muted">A voice buddy that lives in your Mac's menu bar. When you slack off, it notices, scolds you in Hinglish, listens to your excuse and answers back.</p>
 
-  <div class="term">
-    <code id="cmd">curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash</code>
-    <button class="copy" id="copy">Copy</button>
-  </div>
-  <p class="hint">Paste in Terminal. macOS 13+, no admin password. You'll need a free <a href="https://dashboard.sarvam.ai" style="color:inherit">Sarvam AI key</a>.</p>
+  <h2>Voices</h2>
+  <div class="row"><span class="name">Mummy</span><span class="desc">Strict, dramatic, loving</span><button class="play" data-src="audio/mummy.mp3">Play</button></div>
+  <div class="row"><span class="name">Dost</span><span class="desc">Best friend who roasts you</span><button class="play" data-src="audio/dost.mp3">Play</button></div>
+  <div class="row"><span class="name">Commentator</span><span class="desc">Live cricket commentary of your slacking</span><button class="play" data-src="audio/commentator.mp3">Play</button></div>
+  <div class="row"><span class="name">Filmy Narrator</span><span class="desc">Deep, dramatic baritone</span><button class="play" data-src="audio/filmy.mp3">Play</button></div>
+  <div class="row"><span class="name">Action Hero</span><span class="desc">Loud, table-thumping hero</span><button class="play" data-src="audio/action.mp3">Play</button></div>
 
+  <h2>Options in the menu</h2>
+  <div class="row"><span class="name">On / Off</span><span class="desc">Switch at the top of the menu</span></div>
+  <div class="row"><span class="name">Volume</span><span class="desc">Slider, soft to loud</span></div>
+  <div class="row"><span class="name">Demo mode</span><span class="desc">Catches you after 8 seconds instead of 7 minutes</span></div>
+  <div class="row"><span class="name">Show buddy</span><span class="desc">Small animated character on your screen</span></div>
+  <div class="row"><span class="name">Check my screen</span><span class="desc">Notices YouTube, Netflix, Instagram and catches the lie</span></div>
+  <div class="row"><span class="name">Launch at login</span><span class="desc">Starts with your Mac</span></div>
+
+  <h2>Install</h2>
   <ol>
-    <li><b>An 👁 appears in your menu bar.</b> Pick a character and flip the switch.</li>
-    <li><b>Go idle or open YouTube</b> and she scolds you out loud. It gets louder if you ignore her.</li>
-    <li><b>Answer her.</b> She listens, checks your screen, and catches the lie.</li>
-    <li><b>Get back to work</b> and she stops mid-sentence. “आ गई? Good.”</li>
+    <li>Get a free API key at <a href="https://dashboard.sarvam.ai">dashboard.sarvam.ai</a>.</li>
+    <li>Open Terminal, paste this and press Return:
+      <div class="cmd"><code id="cmd">curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash</code><button id="copy">Copy</button></div>
+      <span class="muted">Paste your key when it asks.</span></li>
+    <li>Click the 👁 in your menu bar, choose a voice and turn it on.</li>
+    <li>Allow the microphone when macOS asks.</li>
   </ol>
 
   <footer>
-    Voice by Sarvam AI Bulbul v4 Flash · <a href="https://github.com/garimapahwa/mujhe-pata-hai">GitHub</a><br>
-    Uninstall: <code>… | bash -s -- --uninstall</code>
+    Requires macOS 13 or later. Voice by Sarvam AI. <a href="https://github.com/garimapahwa/mujhe-pata-hai">Source on GitHub</a>.<br>
+    To uninstall: <code>curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash -s -- --uninstall</code>
   </footer>
 </main>
-
 <script>
-  const audio = new Audio("audio/mummy.mp3");
-  const buddy = document.getElementById("buddy");
-  const say = (s) => buddy.contentWindow.postMessage(s, "*");
-  document.getElementById("play").addEventListener("click", () => {
-    audio.currentTime = 0; audio.play();
-    say({ state: "NAGGING", speaking: true, text: "" });
-  });
-  audio.addEventListener("ended", () => say({ state: "WORKING" }));
-
-  document.getElementById("copy").addEventListener("click", async (e) => {
+  const audio = new Audio();
+  let current = null;
+  document.querySelectorAll("button.play").forEach(btn => btn.addEventListener("click", () => {
+    if (current === btn && !audio.paused) { audio.pause(); btn.textContent = "Play"; current = null; return; }
+    if (current) current.textContent = "Play";
+    audio.src = btn.dataset.src; audio.play(); btn.textContent = "Stop"; current = btn;
+  }));
+  audio.addEventListener("ended", () => { if (current) current.textContent = "Play"; current = null; });
+  document.getElementById("copy").addEventListener("click", async e => {
     const b = e.currentTarget;
-    try { await navigator.clipboard.writeText(document.getElementById("cmd").textContent); b.textContent = "Copied"; }
-    catch { b.textContent = "⌘C"; }
-    setTimeout(() => (b.textContent = "Copy"), 1600);
+    try { await navigator.clipboard.writeText(document.getElementById("cmd").textContent); b.textContent = "Copied"; } catch { b.textContent = "⌘C"; }
+    setTimeout(() => (b.textContent = "Copy"), 1500);
   });
 </script>
 </body>
