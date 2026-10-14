@@ -8,6 +8,7 @@ from __future__ import annotations
 import fcntl
 import json
 import os
+import plistlib
 import sys
 import threading
 from pathlib import Path
@@ -32,7 +33,7 @@ from AppKit import (
     NSVariableStatusItemLength,
     NSView,
 )
-from Foundation import NSAttributedString, NSObject, NSTimer
+from Foundation import NSAttributedString, NSObject, NSTimer, NSUserDefaults
 from PyObjCTools import AppHelper
 
 import config
@@ -43,6 +44,8 @@ from sarvam_client import SarvamClient, SarvamError
 APP_NAME = "Mujhe Pata Hai"
 SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "MujhePataHai"
 PREFS_PATH = SUPPORT_DIR / "prefs.json"
+LOGIN_AGENT = Path.home() / "Library" / "LaunchAgents" / "com.mujhepatahai.agent.plist"
+STATUS_NAME = "MujhePataHai"
 DEFAULT_PREFS: dict[str, Any] = {"persona": "mummy", "mode": "demo", "volume": 1.0, "screen": True, "enabled": False}
 MENU_WIDTH = 240
 VOICE_GROUPS = {"Home": ["mummy"], "Friends": ["dost"], "Filmy": ["filmy", "action", "commentator"]}
@@ -67,6 +70,33 @@ def save_api_key(key: str) -> None:
     lines = [l for l in lines if not l.startswith("SARVAM_API_KEY=")] + [f"SARVAM_API_KEY={key}"]
     env.write_text("\n".join(lines) + "\n")
     os.environ["SARVAM_API_KEY"] = key
+
+
+# ------------------------------------------------------------------ launch at login / icon position
+def launch_at_login() -> bool:
+    return LOGIN_AGENT.exists()
+
+
+def set_launch_at_login(on: bool) -> None:
+    if not on:
+        LOGIN_AGENT.unlink(missing_ok=True)
+        return
+    bundle = os.environ.get("MPH_APP_BUNDLE", "")
+    args = ["/usr/bin/open", "-a", bundle] if bundle.endswith(".app") else [sys.executable, str(config.ROOT / "app.py")]
+    LOGIN_AGENT.parent.mkdir(parents=True, exist_ok=True)
+    LOGIN_AGENT.write_bytes(plistlib.dumps({"Label": "com.mujhepatahai.agent", "ProgramArguments": args, "RunAtLoad": True}))
+
+
+def place_icon_on_the_right(prefs: dict[str, Any]) -> None:
+    """New menu bar icons land on the far left, where a busy app's menus (or the notch) hide them.
+    Seed a position near the system icons once; after that macOS remembers wherever you ⌘-drag it."""
+    if prefs.get("icon_placed"):
+        return
+    NSUserDefaults.standardUserDefaults().setDouble_forKey_(100.0, f"NSStatusItem Preferred Position {STATUS_NAME}")
+    prefs["icon_placed"] = True
+    if not launch_at_login():  # first run: start with the Mac by default, like Rustyvibes
+        set_launch_at_login(True)
+    save_prefs(prefs)
 
 
 # ------------------------------------------------------------------ AppKit helpers
@@ -108,8 +138,9 @@ class MenuBarApp:
         self.busy = False
         self._actions: list[_Action] = []  # keep ObjC targets alive
 
+        place_icon_on_the_right(self.prefs)
         self.status_item = NSStatusBar.systemStatusBar().statusItemWithLength_(NSVariableStatusItemLength)
-        self.status_item.setAutosaveName_("MujhePataHai")
+        self.status_item.setAutosaveName_(STATUS_NAME)
         self.status_item.button().setImage_(eye_icon())
         self.status_item.button().setToolTip_(APP_NAME)
         self.status_item.setMenu_(self._build_menu())
@@ -158,8 +189,27 @@ class MenuBarApp:
                 voices.addItem_(v)
         self.voice_item.setSubmenu_(voices)
         menu.addItem_(self.voice_item)
+        menu.addItem_(NSMenuItem.separatorItem())
+
+        self.login_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Launch at Login", "fire:", "")
+        self.login_item.setTarget_(self._target(self.on_toggle_login))
+        self.login_item.setState_(int(launch_at_login()))
+        menu.addItem_(self.login_item)
+        menu.addItem_(NSMenuItem.separatorItem())
+        quit_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"Quit {APP_NAME}", "fire:", "q")
+        quit_item.setTarget_(self._target(lambda _s: self.on_quit()))
+        menu.addItem_(quit_item)
         self._refresh_voice()
         return menu
+
+    def on_toggle_login(self, _sender) -> None:
+        set_launch_at_login(not launch_at_login())
+        self.login_item.setState_(int(launch_at_login()))
+
+    def on_quit(self) -> None:
+        if self.engine:
+            self.engine.stop()
+        NSApplication.sharedApplication().terminate_(None)
 
     def _refresh_voice(self) -> None:
         p = PERSONAS[self.prefs["persona"]]
