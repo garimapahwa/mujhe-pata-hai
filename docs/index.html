@@ -4,468 +4,84 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mujhe Pata Hai</title>
-<meta name="description" content="A Hinglish voice focus buddy for macOS. She catches you slacking, listens to your excuse, checks your screen — and talks back. Powered by Sarvam AI Bulbul v4 Flash.">
-<meta property="og:title" content="मुझे पता है · Mujhe Pata Hai">
-<meta property="og:description" content="Your laptop now has a desi mom. Phone नीचे रखो।">
+<meta name="description" content="A Hinglish voice focus buddy for your Mac menu bar. Powered by Sarvam AI.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👀</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --cream: #fff7ea; --paper: #fffdf8; --chai: #3b2416; --chai-2: #6b4a35; --muted: #8a6f5c;
-    --marigold: #ffb72b; --saffron: #ff8a1f; --rani: #e63e8c; --leaf: #2f9e6e; --line: #f0dfc6;
-    --shadow: 0 10px 30px rgba(59, 36, 22, .12);
+  :root { --bg: #fbfaf7; --fg: #1c1917; --muted: #78716c; --line: #e7e5e4; --term: #1c1917; --accent: #e63e8c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141210; --fg: #f5f5f4; --muted: #a8a29e; --line: #292524; --term: #0c0a09; }
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--cream); color: var(--chai); font-family: "Baloo 2", -apple-system, sans-serif;
-    font-size: 18px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
-  a { color: inherit; }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 22px; }
-  section { padding: 84px 0; }
-  h1, h2, h3 { line-height: 1.12; margin: 0 0 12px; }
-  h2 { font-size: clamp(34px, 5vw, 52px); font-weight: 800; letter-spacing: -.5px; }
-  .eyebrow { display: inline-block; font-weight: 700; font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--rani); margin-bottom: 10px; }
-  .lead { font-size: 21px; color: var(--chai-2); max-width: 640px; }
-  .center { text-align: center; } .center .lead { margin: 0 auto; }
-  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 999px; font: 700 17px "Baloo 2", sans-serif;
-    border: 0; cursor: pointer; text-decoration: none; transition: transform .15s, box-shadow .15s; }
-  .btn:hover { transform: translateY(-2px); }
-  .btn-primary { background: var(--rani); color: #fff; box-shadow: 0 8px 22px rgba(230, 62, 140, .35); }
-  .btn-ghost { background: var(--paper); color: var(--chai); border: 2px solid var(--line); }
-
-  /* marigold garland */
-  .toran { height: 26px; background:
-      radial-gradient(circle at 13px 6px, var(--saffron) 8px, transparent 9px) 0 0 / 26px 26px repeat-x,
-      radial-gradient(circle at 13px 6px, var(--marigold) 11px, transparent 12px) 0 0 / 26px 26px repeat-x; }
-  .toran.leaves { height: 14px; background: radial-gradient(ellipse 7px 5px at 13px 4px, var(--leaf) 90%, transparent 100%) 13px 0 / 52px 14px repeat-x; }
-
-  /* nav */
-  nav { position: sticky; top: 0; z-index: 10; background: rgba(255, 247, 234, .88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
-  nav .wrap { display: flex; align-items: center; gap: 22px; height: 64px; }
-  .logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 22px; text-decoration: none; }
-  .logo span:first-child { font-size: 26px; }
-  nav .links { display: flex; gap: 20px; margin-left: auto; font-weight: 600; font-size: 16px; }
-  nav .links a { text-decoration: none; color: var(--chai-2); } nav .links a:hover { color: var(--rani); }
-  nav .btn { padding: 8px 16px; font-size: 15px; }
-  @media (max-width: 820px) { nav .links { display: none; } nav .btn { margin-left: auto; } }
-
-  /* hero */
-  .hero { padding: 56px 0 40px; }
-  .hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 30px; align-items: center; }
-  .hero h1 { font-size: clamp(64px, 10vw, 118px); font-weight: 800; letter-spacing: -1px; margin-bottom: 4px;
-    background: linear-gradient(100deg, var(--rani), var(--saffron)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .hero .tag { font-size: clamp(24px, 3vw, 32px); font-weight: 700; margin-bottom: 14px; }
-  .hero .actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 26px 0 14px; }
-  .hero .fine { font-size: 15px; color: var(--muted); }
-  .stagebox { position: relative; display: flex; justify-content: center; }
-  .menubar-mock { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: min(380px, 100%); height: 30px; border-radius: 10px;
-    background: rgba(59, 36, 22, .9); color: #fff; display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 0 14px; font: 600 13px -apple-system, sans-serif; }
-  .menubar-mock .eye { background: rgba(255,255,255,.18); border-radius: 6px; padding: 1px 6px; }
-  .hero iframe { margin-top: 38px; }
-  @media (max-width: 860px) { .hero .wrap { grid-template-columns: 1fr; text-align: center; } .hero .actions { justify-content: center; } }
-
-  iframe.buddy { border: 0; background: transparent; width: 300px; height: 380px; display: block; }
-
-  /* audio buttons */
-  .play { display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--line); background: var(--paper); border-radius: 999px;
-    padding: 5px 12px 5px 8px; font: 700 14px "Baloo 2", sans-serif; color: var(--chai); cursor: pointer; transition: border-color .15s, background .15s; }
-  .play:hover { border-color: var(--marigold); }
-  .play .ic { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--marigold); color: var(--chai); font-size: 11px; }
-  .play.playing { background: #fff1d6; border-color: var(--saffron); }
-  .play.playing .ic { background: var(--rani); color: #fff; }
-
-  /* characters */
-  .groups { display: grid; gap: 34px; margin-top: 40px; }
-  .group h3 { font-size: 15px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 700; display: flex; align-items: center; gap: 12px; }
-  .group h3::after { content: ""; flex: 1; height: 2px; background: var(--line); }
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
-  .card { background: var(--paper); border: 2px solid var(--line); border-radius: 24px; padding: 18px; display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: center; box-shadow: var(--shadow); }
-  .card .mini { width: 120px; height: 130px; overflow: hidden; position: relative; }
-  .card .mini iframe { transform: scale(.62); transform-origin: 0 100%; position: absolute; left: -32px; bottom: 0; pointer-events: none; }
-  .card h4 { margin: 0; font-size: 22px; font-weight: 800; }
-  .card .tl { color: var(--muted); font-size: 15px; margin-bottom: 6px; }
-  .card .quote { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
-  .card .row { display: flex; gap: 8px; flex-wrap: wrap; }
-
-  /* escalation */
-  .levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 40px; }
-  .level { border-radius: 24px; padding: 24px; background: var(--paper); border: 2px solid var(--line); box-shadow: var(--shadow); }
-  .level.l2 { border-color: #ffc078; } .level.l3 { border-color: #ff8fa3; background: #fff2f4; }
-  .level .n { font-size: 15px; font-weight: 700; color: var(--muted); letter-spacing: 1px; }
-  .level h3 { font-size: 30px; font-weight: 800; }
-  .level .line { font-size: 17px; font-weight: 600; min-height: 54px; margin-bottom: 14px; }
-  .meter { display: grid; grid-template-columns: 74px 1fr 40px; align-items: center; gap: 8px; font-size: 14px; color: var(--chai-2); margin: 4px 0; }
-  .meter .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
-  .meter .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--marigold), var(--rani)); border-radius: 4px; }
-  .meter b { font-family: "JetBrains Mono", monospace; font-size: 13px; text-align: right; }
-  @media (max-width: 820px) { .levels { grid-template-columns: 1fr; } }
-
-  /* lie detector */
-  .lie { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: center; margin-top: 34px; }
-  .browser { background: var(--paper); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--line); }
-  .browser .bar { display: flex; align-items: center; gap: 6px; padding: 10px 12px; background: #f3e6d2; }
-  .browser .bar i { width: 11px; height: 11px; border-radius: 50%; background: #ff6159; } .browser .bar i:nth-child(2) { background: #ffbd2e; } .browser .bar i:nth-child(3) { background: #28c941; }
-  .browser .tab { margin-left: 10px; background: var(--paper); padding: 4px 12px; border-radius: 8px 8px 0 0; font: 600 13px -apple-system, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .browser .video { aspect-ratio: 16 / 8; background: linear-gradient(135deg, #2b2118, #5c3d2e); display: grid; place-items: center; color: #fff; font-size: 54px; position: relative; }
-  .browser .video small { position: absolute; bottom: 10px; left: 14px; font: 600 13px -apple-system, sans-serif; opacity: .8; }
-  .chat { display: grid; gap: 12px; }
-  .msg { max-width: 88%; padding: 12px 16px; border-radius: 18px; font-size: 18px; font-weight: 600; box-shadow: var(--shadow); }
-  .msg.you { justify-self: end; background: #dff5ea; border-bottom-right-radius: 6px; }
-  .msg.her { background: var(--paper); border: 2px solid var(--marigold); border-bottom-left-radius: 6px; }
-  .msg.her.angry { border-color: var(--rani); position: relative; }
-  .msg small { display: block; font-size: 13px; color: var(--muted); font-weight: 600; }
-  .stamp { display: inline-block; margin-top: 6px; color: var(--rani); border: 3px solid var(--rani); border-radius: 8px; padding: 0 10px; font-weight: 800; font-size: 20px; transform: rotate(-6deg); }
-  @media (max-width: 820px) { .lie { grid-template-columns: 1fr; } }
-
-  /* menu replica */
-  .menu-demo { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
-  .mac-menu { width: 300px; margin: 0 auto; border-radius: 12px; background: rgba(246, 240, 232, .96); box-shadow: 0 18px 50px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.08);
-    font: 14px -apple-system, "SF Pro Text", sans-serif; color: #1d1d1f; padding: 6px; }
-  .mac-menu .hd { display: flex; align-items: center; padding: 8px 10px 10px; }
-  .mac-menu .hd b { font-size: 15px; display: block; } .mac-menu .hd small { color: #86868b; font-size: 12px; }
-  .switch { margin-left: auto; width: 40px; height: 24px; border-radius: 12px; background: #34c759; position: relative; cursor: pointer; transition: background .2s; }
-  .switch::after { content: ""; position: absolute; top: 2px; left: 18px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: left .2s; }
-  .switch.off { background: #d1d1d6; } .switch.off::after { left: 2px; }
-  .mac-menu hr { border: 0; height: 1px; background: rgba(0,0,0,.1); margin: 5px 10px; }
-  .mac-menu .sec { color: #86868b; font-size: 12px; font-weight: 600; padding: 4px 10px; }
-  .mac-menu .it { padding: 4px 10px 4px 24px; border-radius: 6px; position: relative; display: flex; justify-content: space-between; }
-  .mac-menu .it.sel { background: #e63e8c; color: #fff; }
-  .mac-menu .it .ck { position: absolute; left: 8px; }
-  .mac-menu .grey { color: #86868b; font-size: 12px; padding: 4px 10px; }
-  .vol { display: flex; align-items: center; gap: 8px; padding: 4px 10px; }
-  .vol .track { flex: 1; height: 4px; border-radius: 2px; background: linear-gradient(90deg, #007aff 55%, #d1d1d6 55%); position: relative; }
-  .vol .track::after { content: ""; position: absolute; left: 55%; top: -8px; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
-  .feats { display: grid; gap: 18px; }
-  .feat b { font-size: 20px; display: block; } .feat span { color: var(--chai-2); font-size: 17px; }
-  @media (max-width: 820px) { .menu-demo { grid-template-columns: 1fr; } }
-
-  /* how it works */
-  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 40px; counter-reset: step; }
-  .step { background: var(--paper); border: 2px solid var(--line); border-radius: 20px; padding: 18px; position: relative; }
-  .step::before { counter-increment: step; content: counter(step); position: absolute; top: -14px; left: 16px; width: 28px; height: 28px; border-radius: 50%;
-    background: var(--marigold); display: grid; place-items: center; font-weight: 800; font-size: 15px; }
-  .step b { display: block; font-size: 19px; margin-top: 6px; } .step span { font-size: 15px; color: var(--chai-2); display: block; }
-  .chip { display: inline-block; margin-top: 8px; font: 600 12px "JetBrains Mono", monospace; background: #fff1d6; border-radius: 6px; padding: 2px 7px; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 30px; }
-  .stat { text-align: center; background: var(--chai); color: var(--cream); border-radius: 22px; padding: 22px; }
-  .stat b { display: block; font-size: 44px; font-weight: 800; color: var(--marigold); line-height: 1; }
-  .stat span { font-size: 15px; opacity: .85; }
-  @media (max-width: 900px) { .flow { grid-template-columns: 1fr 1fr; } .stats { grid-template-columns: 1fr; } }
-
-  /* privacy */
-  .priv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 36px; }
-  .priv > div { background: var(--paper); border-radius: 20px; padding: 20px; border: 2px solid var(--line); }
-  .priv .ico { font-size: 30px; } .priv b { display: block; font-size: 18px; margin: 4px 0; } .priv span { font-size: 15px; color: var(--chai-2); }
-  @media (max-width: 900px) { .priv { grid-template-columns: 1fr 1fr; } }
-
-  /* install */
-  #install { background: var(--chai); color: var(--cream); }
-  #install .lead { color: #e8d6c3; }
-  .term { max-width: 820px; margin: 34px auto 0; border-radius: 16px; background: #1b120c; box-shadow: 0 20px 50px rgba(0,0,0,.35); overflow: hidden; text-align: left; }
-  .term .bar { display: flex; gap: 6px; padding: 12px 14px; background: #2a1c13; align-items: center; }
-  .term .bar i { width: 11px; height: 11px; border-radius: 50%; background: #ff6159; } .term .bar i:nth-child(2) { background: #ffbd2e; } .term .bar i:nth-child(3) { background: #28c941; }
-  .term .bar span { margin-left: 10px; font: 500 13px "JetBrains Mono", monospace; color: #b59a85; }
-  .term .cmd { display: flex; align-items: center; gap: 14px; padding: 20px 20px; font: 500 15.5px/1.5 "JetBrains Mono", monospace; color: #ffe7c2; }
-  .term .cmd code { flex: 1; overflow-x: auto; white-space: nowrap; }
-  .term .cmd code::before { content: "$ "; color: var(--marigold); }
-  .copy { flex: none; background: var(--marigold); color: var(--chai); border: 0; border-radius: 10px; padding: 8px 14px; font: 700 15px "Baloo 2", sans-serif; cursor: pointer; }
-  .copy.done { background: var(--leaf); color: #fff; }
-  .term .out { padding: 0 20px 20px; font: 500 14px/1.7 "JetBrains Mono", monospace; color: #b59a85; }
-  .term .out .g { color: #7ee2a8; } .term .out .y { color: var(--marigold); }
-  .steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 900px; margin: 34px auto 0; text-align: left; }
-  .steps3 div { background: rgba(255,255,255,.06); border-radius: 18px; padding: 18px; }
-  .steps3 b { display: block; color: var(--marigold); font-size: 18px; } .steps3 span { font-size: 15px; color: #e8d6c3; }
-  .does { max-width: 820px; margin: 30px auto 0; text-align: left; color: #e8d6c3; font-size: 16px; }
-  .does code { font-family: "JetBrains Mono", monospace; font-size: 13px; background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 5px; color: #ffe7c2; }
-  @media (max-width: 820px) { .steps3 { grid-template-columns: 1fr; } }
-
-  /* specs */
-  table { width: 100%; max-width: 820px; margin: 30px auto 0; border-collapse: collapse; font-size: 17px; }
-  td { padding: 12px 6px; border-bottom: 2px dashed var(--line); vertical-align: top; }
-  td:first-child { font-weight: 700; width: 34%; color: var(--chai-2); }
-
-  footer { padding: 46px 0 60px; font-size: 15px; color: var(--muted); text-align: center; }
-  footer a { color: var(--chai); font-weight: 700; }
-  .final { text-align: center; padding: 70px 0 30px; }
+  body { margin: 0; min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; background: var(--bg); color: var(--fg);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Kohinoor Devanagari", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  main { width: 100%; max-width: 660px; padding: 48px 20px; }
+  @media (max-width: 500px) { h1 { font-size: 28px; } h1 span { display: block; } }
+  .buddy { width: 150px; height: 190px; margin: 0 0 4px -26px; overflow: hidden; position: relative; }
+  .buddy iframe { position: absolute; left: 0; bottom: 0; width: 300px; height: 380px; border: 0; background: transparent;
+    transform: scale(.5); transform-origin: 0 100%; pointer-events: none; }
+  h1 { font-size: 34px; line-height: 1.2; margin: 0 0 6px; font-weight: 700; letter-spacing: -.3px; }
+  h1 span { color: var(--muted); font-weight: 500; }
+  .lead { color: var(--muted); margin: 0 0 32px; }
+  .term { background: var(--term); border-radius: 12px; padding: 16px 16px 16px 18px; display: flex; align-items: center; gap: 12px; }
+  .term code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; color: #f5f5f4; font: 14px/1.5 ui-monospace, "SF Mono", Menlo, monospace; scrollbar-width: none; }
+  .term code::before { content: "$ "; color: #78716c; }
+  button.copy { flex: none; border: 1px solid #44403c; background: transparent; color: #f5f5f4; border-radius: 8px; padding: 6px 12px;
+    font: 13px -apple-system, sans-serif; cursor: pointer; }
+  button.copy:hover { border-color: #a8a29e; }
+  .hint { font-size: 14px; color: var(--muted); margin: 10px 2px 36px; }
+  ol { margin: 0; padding: 0; list-style: none; counter-reset: s; border-top: 1px solid var(--line); }
+  li { counter-increment: s; padding: 14px 0 14px 34px; border-bottom: 1px solid var(--line); position: relative; }
+  li::before { content: counter(s); position: absolute; left: 0; top: 14px; width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid var(--line); font-size: 12px; display: grid; place-items: center; color: var(--muted); }
+  li b { font-weight: 600; }
+  .play { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; }
+  footer { margin-top: 36px; font-size: 14px; color: var(--muted); }
+  footer a { color: inherit; }
+  footer code { font: 12.5px ui-monospace, Menlo, monospace; }
 </style>
 </head>
 <body>
-<div class="toran"></div><div class="toran leaves"></div>
+<main>
+  <div class="buddy"><iframe src="buddy.html?persona=mummy" title="Mummy" id="buddy"></iframe></div>
+  <h1>मुझे पता है <span>· Mujhe Pata Hai</span></h1>
+  <p class="lead">A voice buddy in your Mac's menu bar. Slack off and she catches you, in Hinglish.
+    <button class="play" id="play">▶ Hear her</button></p>
 
-<nav>
-  <div class="wrap">
-    <a class="logo" href="#"><span>👀</span><span>मुझे पता है</span></a>
-    <div class="links">
-      <a href="#characters">Characters</a><a href="#drama">Drama levels</a><a href="#lies">Lie detector</a>
-      <a href="#menubar">Menu bar</a><a href="#privacy">Privacy</a>
-    </div>
-    <a class="btn btn-primary" href="#install">Install</a>
+  <div class="term">
+    <code id="cmd">curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash</code>
+    <button class="copy" id="copy">Copy</button>
   </div>
-</nav>
+  <p class="hint">Paste in Terminal. macOS 13+, no admin password. You'll need a free <a href="https://dashboard.sarvam.ai" style="color:inherit">Sarvam AI key</a>.</p>
 
-<!-- HERO -->
-<header class="hero">
-  <div class="wrap">
-    <div>
-      <span class="eyebrow">Hinglish voice focus buddy · macOS</span>
-      <h1>मुझे पता है।</h1>
-      <div class="tag">Phone नीचे रखो। She's watching. 👀</div>
-      <p class="lead">Go idle at your laptop and a desi mummy catches you, out loud. Make an excuse and she <em>listens</em>, checks your screen, and calls out the lie. Get back to work and she stops mid-sentence: <strong>“आ गई? Good. काम करो।”</strong></p>
-      <div class="actions">
-        <a class="btn btn-primary" href="#install">⌘ Install in one line</a>
-        <button class="btn btn-ghost play-hero" data-src="audio/mummy.mp3">▶ Hear her</button>
-      </div>
-      <div class="fine">Free · macOS 13 or later · Voice by Sarvam AI <strong>Bulbul v4 Flash</strong></div>
-    </div>
-    <div class="stagebox">
-      <div class="menubar-mock"><span>🔋</span><span>📶</span><span class="eye">👁</span><span>Wed 9:41</span></div>
-      <iframe class="buddy" id="hero-buddy" src="buddy.html?persona=mummy&loop=1" title="Animated buddy"></iframe>
-    </div>
-  </div>
-</header>
+  <ol>
+    <li><b>An 👁 appears in your menu bar.</b> Pick a character and flip the switch.</li>
+    <li><b>Go idle or open YouTube</b> and she scolds you out loud. It gets louder if you ignore her.</li>
+    <li><b>Answer her.</b> She listens, checks your screen, and catches the lie.</li>
+    <li><b>Get back to work</b> and she stops mid-sentence. “आ गई? Good.”</li>
+  </ol>
 
-<!-- CHARACTERS -->
-<section id="characters">
-  <div class="wrap">
-    <span class="eyebrow">Characters</span>
-    <h2>Pick your nagger.</h2>
-    <p class="lead">Five characters, each with its own Bulbul voice, attitude and scoldings. Pick one from the menu bar and hear it introduce itself.</p>
-    <div class="groups" id="groups"></div>
-  </div>
-</section>
-
-<!-- DRAMA LEVELS -->
-<section id="drama" style="background: var(--paper)">
-  <div class="wrap">
-    <span class="eyebrow">Escalation</span>
-    <h2>Teasing. Annoyed. FULL DRAMA.</h2>
-    <p class="lead">Stay silent and she escalates using Bulbul's <strong>pace, pitch and loudness</strong>: faster, higher, louder, until the speech bubble turns red and steam comes out.</p>
-    <div class="levels">
-      <div class="level"><div class="n">LEVEL 1</div><h3>Teasing 😏</h3><div class="line">क्या चल रहा है बेटा? Phone चला रही हो?</div>
-        <div class="meter">pace<span class="bar"><i style="width:40%"></i></span><b>1.0</b></div>
-        <div class="meter">pitch<span class="bar"><i style="width:50%"></i></span><b>0.0</b></div>
-        <div class="meter">loudness<span class="bar"><i style="width:40%"></i></span><b>1.0</b></div><br>
-        <button class="play" data-src="audio/level1.mp3"><span class="ic">▶</span>Play</button></div>
-      <div class="level l2"><div class="n">LEVEL 2</div><h3>Annoyed 😤</h3><div class="line">बेटा! मैं दूसरी बार बोल रही हूँ। Phone नीचे रखो, अभी!</div>
-        <div class="meter">pace<span class="bar"><i style="width:55%"></i></span><b>1.15</b></div>
-        <div class="meter">pitch<span class="bar"><i style="width:60%"></i></span><b>0.1</b></div>
-        <div class="meter">loudness<span class="bar"><i style="width:64%"></i></span><b>1.6</b></div><br>
-        <button class="play" data-src="audio/level2.mp3"><span class="ic">▶</span>Play</button></div>
-      <div class="level l3"><div class="n">LEVEL 3</div><h3>FULL DRAMA 🤬</h3><div class="line">मैं बोल रही हूँ ना! PHONE. नीचे. रखो!</div>
-        <div class="meter">pace<span class="bar"><i style="width:70%"></i></span><b>1.3</b></div>
-        <div class="meter">pitch<span class="bar"><i style="width:70%"></i></span><b>0.2</b></div>
-        <div class="meter">loudness<span class="bar"><i style="width:88%"></i></span><b>2.2</b></div><br>
-        <button class="play" data-src="audio/level3.mp3"><span class="ic">▶</span>Play</button></div>
-    </div>
-  </div>
-</section>
-
-<!-- LIE DETECTOR -->
-<section id="lies">
-  <div class="wrap">
-    <span class="eyebrow">Lie detector</span>
-    <h2>“पढ़ रही थी।” Sure you were.</h2>
-    <p class="lead">She reads the title of the window in front of you (even on your second monitor). Say you're studying while Netflix is playing and she busts you. A lecture on YouTube is fine, and owning up gets you forgiven.</p>
-    <div class="lie">
-      <div class="browser">
-        <div class="bar"><i></i><i></i><i></i><span class="tab">▶ Bhide की टांग क्यों घसीट रहा है Jetha? – YouTube</span></div>
-        <div class="video">▶<small>youtube.com · 🚨 distraction in focus for 8 s</small></div>
-      </div>
-      <div class="chat">
-        <div class="msg her"><small>Mummy · caught you</small>बेटा, Taarak Mehta देख रही हो? मुझे पता है!</div>
-        <div class="msg you"><small>You</small>नहीं नहीं, मैं पढ़ रही हूँ…</div>
-        <div class="msg her angry"><small>Mummy · CAUGHT_LYING</small>पढ़ाई? Screen पे तो Taarak Mehta चल रहा है! मुझे सब पता है बेटा।<br><span class="stamp">मुझे पता है!</span></div>
-        <div class="msg you"><small>You</small>sorry sorry, YouTube देख रही थी 🙈</div>
-        <div class="msg her"><small>Mummy · forgiven</small>चलो, सच तो बोला! वापस काम पे।</div>
-        <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="play" data-src="audio/busted.mp3"><span class="ic">▶</span>Busted</button>
-          <button class="play" data-src="audio/forgive.mp3"><span class="ic">▶</span>Forgiven</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- MENU BAR -->
-<section id="menubar" style="background: var(--paper)">
-  <div class="wrap menu-demo">
-    <div>
-      <span class="eyebrow">Menu bar</span>
-      <h2>Always one click away.</h2>
-      <p class="lead">She lives next to your clock. Flip the switch, pick a character, set the volume. No Dock icon, no windows, just a little buddy you can drag anywhere.</p>
-      <div class="feats" style="margin-top:26px">
-        <div class="feat"><b>🎙 Talks <em>and</em> listens</b><span>Reply out loud. Excuse, confession, “I'm back”, or gibberish: she understands all of it.</span></div>
-        <div class="feat"><b>🖱 Can't be fooled</b><span>Scrolling YouTube isn't work. Only typing in a real work app counts as “back”.</span></div>
-        <div class="feat"><b>🌙 Launch at login</b><span>Starts with your Mac and remembers your character, volume and the buddy's spot.</span></div>
-      </div>
-    </div>
-    <div class="mac-menu" aria-label="Menu preview">
-      <div class="hd"><div><b>Mujhe Pata Hai</b><small>👩 Mummy is watching · Working</small></div><div class="switch" id="sw"></div></div>
-      <hr><div class="sec">Character</div>
-      <div class="it sel"><span>👩&nbsp; Mummy</span><span>›</span></div>
-      <hr><div class="sec">Volume</div>
-      <div class="vol">🔈<span class="track"></span>🔊</div>
-      <hr>
-      <div class="it"><span class="ck">✓</span>Demo Mode (catches you in 8 s)</div>
-      <div class="it"><span class="ck">✓</span>Show Buddy on Screen</div>
-      <div class="it"><span class="ck">✓</span>Check My Screen (YouTube, Netflix…)</div>
-      <div class="it"><span class="ck">✓</span>Launch at Login</div>
-      <hr><div class="grey">Caught 4 · Lies 1 · Excuses 2 · Confessions 1</div><hr>
-      <div class="it">🔑 Set Sarvam API Key…</div>
-      <div class="it">ⓘ About Mujhe Pata Hai</div>
-      <div class="it"><span>⊠ Quit Mujhe Pata Hai</span><span style="color:#86868b">⌘Q</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section id="how">
-  <div class="wrap">
-    <span class="eyebrow">How it works</span>
-    <h2>Three Sarvam models. One very strict mummy.</h2>
-    <div class="flow">
-      <div class="step"><b>Notice</b><span>Reads macOS idle time and the focused window's title. No keylogging.</span><span class="chip">HIDIdleTime</span></div>
-      <div class="step"><b>Nag</b><span>Streams the scolding; playback starts on the first chunk.</span><span class="chip">bulbul:v4-flash</span></div>
-      <div class="step"><b>Listen</b><span>Mic opens only after she finishes, then stops when you do.</span><span class="chip">saaras:v4 · codemix</span></div>
-      <div class="step"><b>Understand</b><span>Excuse, confession, back to work, or a lie the screen contradicts.</span><span class="chip">sarvam-105b</span></div>
-      <div class="step"><b>Respond</b><span>Snooze, forgive, escalate, or bust you, in character.</span><span class="chip">pace · pitch · loudness</span></div>
-    </div>
-    <div class="stats">
-      <div class="stat"><b>~120 ms</b><span>to first spoken word (Bulbul v4 Flash streaming)</span></div>
-      <div class="stat"><b>~250 ms</b><span>to understand your Hinglish (Saaras v4)</span></div>
-      <div class="stat"><b>~200 ms</b><span>to come up with a comeback (Sarvam-105B)</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- PRIVACY -->
-<section id="privacy" style="background: var(--paper)">
-  <div class="wrap center">
-    <span class="eyebrow">Privacy</span>
-    <h2>Sees titles, not pixels.</h2>
-    <p class="lead">She's nosy, not creepy.</p>
-    <div class="priv" style="text-align:left">
-      <div><div class="ico">⌨️</div><b>No keylogging</b><span>Only “seconds since your last input”. Never which keys.</span></div>
-      <div><div class="ico">🖼</div><b>No screenshots</b><span>Just the focused app name and the browser tab's title and site.</span></div>
-      <div><div class="ico">🎙</div><b>Mic only when asked</b><span>Opens for a few seconds after a nag, closes when you stop talking. Nothing recorded is kept.</span></div>
-      <div><div class="ico">🔑</div><b>Your key, your Mac</b><span>Your Sarvam API key stays on this Mac. Turn off screen checks any time.</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- INSTALL -->
-<section id="install">
-  <div class="wrap center">
-    <span class="eyebrow" style="color:var(--marigold)">Get Mujhe Pata Hai</span>
-    <h2>एक line. फिर बस काम।</h2>
-    <p class="lead">Open Terminal, paste this, press Return. No admin password needed.</p>
-    <div class="term">
-      <div class="bar"><i></i><i></i><i></i><span>Terminal — zsh</span></div>
-      <div class="cmd"><code id="cmd">curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash</code><button class="copy" id="copy">Copy</button></div>
-      <div class="out">
-        <span class="g">✓</span> Python: Python 3.12<br>
-        <span class="g">✓</span> Dependencies installed<br>
-        <span class="y">Sarvam AI API key</span> — Paste key: ••••••••<br>
-        <span class="g">✓</span> Installed ~/Applications/Mujhe Pata Hai.app<br>
-        <span class="g">Ho gaya! ✓</span> Look for the 👁 eye in your menu bar.
-      </div>
-    </div>
-    <div class="steps3">
-      <div><b>1 · Get a Sarvam key</b><span>Free at <a href="https://dashboard.sarvam.ai" target="_blank" rel="noopener">dashboard.sarvam.ai</a>. Paste it when the installer asks, or later from the menu.</span></div>
-      <div><b>2 · Flip the switch</b><span>Click the 👁 in your menu bar, pick a character, turn it on. Allow the Microphone when macOS asks.</span></div>
-      <div><b>3 · Try to slack</b><span>Go idle for 8 seconds, or open YouTube. मुझे पता है। 👀</span></div>
-    </div>
-    <div class="does">
-      <strong>What the script does:</strong> finds Python 3.11+ (installs it with Homebrew if needed), downloads the app into
-      <code>~/Library/Application Support/MujhePataHai</code>, sets up its own Python environment, saves your key there, and creates
-      <code>~/Applications/Mujhe Pata Hai.app</code>. Run it again to update.<br><br>
-      <strong>Uninstall:</strong> <code>curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash -s -- --uninstall</code>
-    </div>
-  </div>
-</section>
-
-<!-- SPECS -->
-<section id="specs">
-  <div class="wrap">
-    <span class="eyebrow">Tech specs</span>
-    <h2>The fine print.</h2>
-    <table>
-      <tr><td>Version</td><td>1.0.0</td></tr>
-      <tr><td>Works on</td><td>macOS 13 Ventura or later · Apple Silicon and Intel</td></tr>
-      <tr><td>Characters</td><td>Mummy · Dost · Commentator · Filmy Narrator · Action Hero</td></tr>
-      <tr><td>Voice</td><td>Sarvam Bulbul v4 Flash (HTTP streaming, Hinglish code-mixing)</td></tr>
-      <tr><td>Ears &amp; brain</td><td>Saaras v4 (codemix) · Sarvam-105B Conversations</td></tr>
-      <tr><td>Permissions</td><td>Microphone · Automation for Chrome/Safari (optional). No Accessibility, no Screen Recording.</td></tr>
-      <tr><td>Network</td><td>Only Sarvam AI's API, with your own key</td></tr>
-      <tr><td>Price</td><td>Free and open source</td></tr>
-    </table>
-  </div>
-</section>
-
-<div class="final">
-  <h2>Ab kaam karo. 😤</h2>
-  <p class="lead" style="margin:0 auto 22px">Or don't. She'll know.</p>
-  <a class="btn btn-primary" href="#install">Install Mujhe Pata Hai</a>
-  &nbsp; <a class="btn btn-ghost" href="https://github.com/garimapahwa/mujhe-pata-hai" target="_blank" rel="noopener">View the source</a>
-</div>
-
-<footer>
-  <div class="toran" style="margin-bottom:22px"></div>
-  Built with chai by <a href="https://github.com/garimapahwa" target="_blank" rel="noopener">@garimapahwa</a> for the Sarvam Bulbul Build Challenge.<br>
-  Voices by <a href="https://www.sarvam.ai" target="_blank" rel="noopener">Sarvam AI</a>. Not an official Sarvam product. All characters and dialogues are original; no celebrity voices.
-</footer>
+  <footer>
+    Voice by Sarvam AI Bulbul v4 Flash · <a href="https://github.com/garimapahwa/mujhe-pata-hai">GitHub</a><br>
+    Uninstall: <code>… | bash -s -- --uninstall</code>
+  </footer>
+</main>
 
 <script>
-  // ---- characters (same data as the app's config.py)
-  const CHARS = [
-    { group: "घर · Home", key: "mummy", emoji: "👩", name: "Mummy", tl: "strict, dramatic, loving", quote: "मैंने इतनी मेहनत से पढ़ाया, और तुम reels देख रही हो? हद है!" },
-    { group: "यार · Friends", key: "dost", emoji: "😎", name: "Dost", tl: "Gen-Z roast best friend", quote: "Bro… seriously? Reels? मुझे पता है, मुझे पता है।" },
-    { group: "Filmy", key: "filmy", emoji: "🎬", name: "Filmy Narrator", tl: "deep, dramatic baritone", quote: "देवियों और सज्जनों… keyboard ख़ामोश है। और हम जानते हैं, इस ख़ामोशी के पीछे, phone है।" },
-    { group: "Filmy", key: "action", emoji: "💪", name: "Action Hero", tl: "loud, table-thumping hero", quote: "ओए! Keyboard चुप क्यों है? Phone उठाया ना? मुझे पता है!" },
-    { group: "Filmy", key: "commentator", emoji: "🏏", name: "Commentator", tl: "live procrastination commentary", quote: "और ये गई focus boundary के पार! Phone ने एक और wicket लिया!" },
-  ];
-  const groups = {};
-  CHARS.forEach(c => (groups[c.group] ||= []).push(c));
-  document.getElementById("groups").innerHTML = Object.entries(groups).map(([g, cs]) => `
-    <div class="group"><h3>${g}</h3><div class="cards">${cs.map(c => `
-      <div class="card">
-        <div class="mini"><iframe class="buddy" id="mini-${c.key}" src="buddy.html?persona=${c.key}" title="${c.name}" loading="lazy"></iframe></div>
-        <div><h4>${c.emoji} ${c.name}</h4><div class="tl">${c.tl}</div><div class="quote">“${c.quote}”</div>
-          <div class="row">
-            <button class="play" data-src="audio/${c.key}.mp3" data-buddy="mini-${c.key}" data-text="${c.quote}"><span class="ic">▶</span>Scolding</button>
-            <button class="play" data-src="audio/${c.key}_intro.mp3" data-buddy="mini-${c.key}"><span class="ic">▶</span>Intro</button>
-          </div></div>
-      </div>`).join("")}</div></div>`).join("");
-
-  // ---- audio: one player, buttons toggle, the matching buddy talks while it plays
-  const audio = new Audio();
-  let current = null;
-  function stopAll() {
-    document.querySelectorAll(".play.playing").forEach(b => { b.classList.remove("playing"); b.querySelector(".ic").textContent = "▶"; });
-    if (current && current.dataset.buddy) document.getElementById(current.dataset.buddy)?.contentWindow.postMessage({ state: "WORKING", text: "" }, "*");
-  }
-  function play(btn) {
-    if (current === btn && !audio.paused) { audio.pause(); stopAll(); current = null; return; }
-    stopAll(); current = btn;
-    audio.src = btn.dataset.src; audio.play();
-    btn.classList.add("playing"); const ic = btn.querySelector(".ic"); if (ic) ic.textContent = "■";
-    if (btn.dataset.buddy) document.getElementById(btn.dataset.buddy)?.contentWindow.postMessage({ state: "NAGGING", speaking: true, text: btn.dataset.text || "" }, "*");
-  }
-  audio.addEventListener("ended", () => { stopAll(); current = null; });
-  document.addEventListener("click", e => { const b = e.target.closest(".play, .play-hero"); if (b) play(b); });
-
-  // ---- copy install command
-  document.getElementById("copy").addEventListener("click", async e => {
-    const btn = e.currentTarget;
-    try { await navigator.clipboard.writeText(document.getElementById("cmd").textContent); btn.textContent = "Copied ✓"; btn.classList.add("done"); }
-    catch { btn.textContent = "Select & ⌘C"; }
-    setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("done"); }, 2000);
+  const audio = new Audio("audio/mummy.mp3");
+  const buddy = document.getElementById("buddy");
+  const say = (s) => buddy.contentWindow.postMessage(s, "*");
+  document.getElementById("play").addEventListener("click", () => {
+    audio.currentTime = 0; audio.play();
+    say({ state: "NAGGING", speaking: true, text: "" });
   });
+  audio.addEventListener("ended", () => say({ state: "WORKING" }));
 
-  // ---- menu replica switch
-  document.getElementById("sw").addEventListener("click", e => e.currentTarget.classList.toggle("off"));
+  document.getElementById("copy").addEventListener("click", async (e) => {
+    const b = e.currentTarget;
+    try { await navigator.clipboard.writeText(document.getElementById("cmd").textContent); b.textContent = "Copied"; }
+    catch { b.textContent = "⌘C"; }
+    setTimeout(() => (b.textContent = "Copy"), 1600);
+  });
 </script>
 </body>
 </html>
