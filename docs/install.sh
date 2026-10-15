@@ -1,22 +1,27 @@
 #!/usr/bin/env bash
-# Mujhe Pata Hai installer — https://garimapahwa.github.io/mujhe-pata-hai
+# Side Eye installer — https://garimapahwa.github.io/side-eye
 #
-#   Install / update:  curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash
-#   Uninstall:         curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash -s -- --uninstall
+#   Install / update:  curl -fsSL https://garimapahwa.github.io/side-eye/install.sh | bash
+#   Uninstall:         curl -fsSL https://garimapahwa.github.io/side-eye/install.sh | bash -s -- --uninstall
 #
 # No admin password. Everything lives in your user folder:
-#   ~/Applications/Mujhe Pata Hai.app                     the menu bar app
-#   ~/Library/Application Support/MujhePataHai/           code, Python environment, your settings
+#   ~/Applications/Side Eye.app                     the menu bar app
+#   ~/Library/Application Support/SideEye/          code, Python environment, your settings
 set -euo pipefail
 
-REPO="garimapahwa/mujhe-pata-hai"
+REPO="garimapahwa/side-eye"
 BRANCH="main"
-APP_NAME="Mujhe Pata Hai"
-SUPPORT="$HOME/Library/Application Support/MujhePataHai"
+APP_NAME="Side Eye"
+LABEL="com.sideeye.agent"
+SUPPORT="$HOME/Library/Application Support/SideEye"
 SRC="$SUPPORT/app"
 VENV="$SUPPORT/venv"
 APP="$HOME/Applications/$APP_NAME.app"
-AGENT="$HOME/Library/LaunchAgents/com.mujhepatahai.agent.plist"
+AGENT="$HOME/Library/LaunchAgents/$LABEL.plist"
+# before the rename the app was called "Mujhe Pata Hai"
+OLD_SUPPORT="$HOME/Library/Application Support/MujhePataHai"
+OLD_APP="$HOME/Applications/Mujhe Pata Hai.app"
+OLD_LABEL="com.mujhepatahai.agent"
 
 bold=$'\033[1m'; dim=$'\033[2m'; red=$'\033[31m'; green=$'\033[32m'; yellow=$'\033[33m'; reset=$'\033[0m'
 say()  { printf "%s\n" "${bold}›${reset} $*"; }
@@ -28,20 +33,32 @@ quit_running_app() {
   pkill -f "$SRC/app.py" 2>/dev/null || true
 }
 
+remove_old_install() {  # carry the API key and settings over from "Mujhe Pata Hai", then remove it
+  [[ -d "$OLD_SUPPORT" || -d "$OLD_APP" ]] || return 0
+  launchctl bootout "gui/$(id -u)/$OLD_LABEL" 2>/dev/null || true
+  pkill -f "$OLD_SUPPORT/app/app.py" 2>/dev/null || true
+  mkdir -p "$SUPPORT"
+  [[ -f "$OLD_SUPPORT/app/.env" && ! -f "$SRC/.env" ]] && mkdir -p "$SRC" && cp "$OLD_SUPPORT/app/.env" "$SRC/.env"
+  [[ -f "$OLD_SUPPORT/prefs.json" && ! -f "$SUPPORT/prefs.json" ]] && cp "$OLD_SUPPORT/prefs.json" "$SUPPORT/prefs.json"
+  rm -rf "$OLD_APP" "$OLD_SUPPORT"
+  rm -f "$HOME/Library/LaunchAgents/$OLD_LABEL.plist"
+  ok "Replaced the old Mujhe Pata Hai app"
+}
+
 uninstall() {
   say "Removing ${APP_NAME}…"
-  launchctl bootout "gui/$(id -u)/com.mujhepatahai.agent" 2>/dev/null || true
+  launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
   quit_running_app
   rm -rf "$APP" "$SUPPORT"
   rm -f "$AGENT"
-  ok "Uninstalled. Phone उठा सकती हो… पर मुझे पता चल जाएगा। 👀"
+  ok "Uninstalled. Phone उठा सकती हो… पर मुझे पता चल जाएगा।"
   exit 0
 }
 
 [[ "${1:-}" == "--uninstall" ]] && uninstall
 [[ "$(uname -s)" == "Darwin" ]] || die "$APP_NAME is macOS-only (it reads macOS idle time and lives in the menu bar)."
 
-printf "\n%s\n%s\n\n" "${bold}  मुझे पता है · $APP_NAME${reset}" "${dim}  your Hinglish voice focus buddy · powered by Sarvam AI${reset}"
+printf "\n%s\n%s\n\n" "${bold}  $APP_NAME${reset}" "${dim}  your Hinglish voice focus buddy · powered by Sarvam AI${reset}"
 
 # ---------------------------------------------------------------- 1. Python 3.11+
 find_python() {
@@ -69,6 +86,7 @@ ok "Python: $("$PY" --version 2>&1)"
 
 # ---------------------------------------------------------------- 2. download the app (keep the user's .env on update)
 quit_running_app
+remove_old_install
 mkdir -p "$SUPPORT"
 SAVED_ENV=""
 [[ -f "$SRC/.env" ]] && SAVED_ENV="$(cat "$SRC/.env")"
@@ -119,11 +137,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <plist version="1.0"><dict>
   <key>CFBundleName</key><string>$APP_NAME</string>
   <key>CFBundleDisplayName</key><string>$APP_NAME</string>
-  <key>CFBundleIdentifier</key><string>com.mujhepatahai.app</string>
+  <key>CFBundleIdentifier</key><string>com.sideeye.app</string>
   <key>CFBundleVersion</key><string>1.0.0</string>
   <key>CFBundleShortVersionString</key><string>1.0.0</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleExecutable</key><string>mujhe-pata-hai</string>
+  <key>CFBundleExecutable</key><string>side-eye</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSUIElement</key><true/>
@@ -131,29 +149,29 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>NSAppleEventsUsageDescription</key><string>Reads the title of your active Chrome/Safari tab to check if you're really studying.</string>
 </dict></plist>
 PLIST
-# Run Python from *inside* the bundle so macOS treats the process as "Mujhe Pata Hai" (not "Python"):
+# Run Python from *inside* the bundle so macOS treats the process as "Side Eye" (not "Python"):
 # that's what makes the menu bar icon show up and the microphone prompt name the app.
 FRAMEWORK_PY="$("$VENV/bin/python" -c 'import os, sys; print(os.path.join(sys.base_prefix, "Resources/Python.app/Contents/MacOS/Python"))')"
 if [[ -x "$FRAMEWORK_PY" ]]; then
-  cp "$FRAMEWORK_PY" "$APP/Contents/MacOS/MujhePataHai"
-  RUNNER='export __PYVENV_LAUNCHER__="'"$VENV/bin/python"'"; exec "$(dirname "$0")/MujhePataHai"'
+  cp "$FRAMEWORK_PY" "$APP/Contents/MacOS/SideEye"
+  RUNNER='export __PYVENV_LAUNCHER__="'"$VENV/bin/python"'"; exec "$(dirname "$0")/SideEye"'
 else
   RUNNER='exec "'"$VENV/bin/python"'"'
 fi
-cat > "$APP/Contents/MacOS/mujhe-pata-hai" <<LAUNCHER
+cat > "$APP/Contents/MacOS/side-eye" <<LAUNCHER
 #!/bin/bash
 # Opened from Finder/Spotlight? Hand off to launchd: macOS 26 only shows the menu bar icon
 # of this (non-notarized) app when launchd starts it.
 if [[ -z "\$MPH_VIA_LAUNCHD" ]]; then
-  launchctl kickstart "gui/\$(id -u)/com.mujhepatahai.agent" 2>/dev/null \\
-    || { launchctl bootstrap "gui/\$(id -u)" "$AGENT" 2>/dev/null; launchctl kickstart "gui/\$(id -u)/com.mujhepatahai.agent"; }
+  launchctl kickstart "gui/\$(id -u)/$LABEL" 2>/dev/null \\
+    || { launchctl bootstrap "gui/\$(id -u)" "$AGENT" 2>/dev/null; launchctl kickstart "gui/\$(id -u)/$LABEL"; }
   exit 0
 fi
 export MPH_APP_BUNDLE="$APP"
 cd "$SRC"
 $RUNNER "$SRC/app.py" "\$@"
 LAUNCHER
-chmod +x "$APP/Contents/MacOS/mujhe-pata-hai"
+chmod +x "$APP/Contents/MacOS/side-eye"
 
 # app icon: the 👀 emoji on a marigold squircle (best effort)
 "$VENV/bin/python" - "$APP/Contents/Resources" <<'ICON' >/dev/null 2>&1 || true
@@ -179,9 +197,9 @@ codesign --force --deep --sign - "$APP" >/dev/null 2>&1 || true
 ok "Installed ${dim}$APP${reset}"
 
 # ---------------------------------------------------------------- 6. start with launchd (now and at every login)
-"$VENV/bin/python" - "$AGENT" "$APP/Contents/MacOS/mujhe-pata-hai" <<'AGENTPY'
+"$VENV/bin/python" - "$AGENT" "$APP/Contents/MacOS/side-eye" "$LABEL" <<'AGENTPY'
 import plistlib, sys, os
-path, launcher = sys.argv[1], sys.argv[2]
+path, launcher, label = sys.argv[1], sys.argv[2], sys.argv[3]
 run_at_load = True
 if os.path.exists(path):  # keep the user's "Launch at Login" choice
     try:
@@ -189,16 +207,16 @@ if os.path.exists(path):  # keep the user's "Launch at Login" choice
     except Exception:
         pass
 os.makedirs(os.path.dirname(path), exist_ok=True)
-plistlib.dump({"Label": "com.mujhepatahai.agent", "ProgramArguments": [launcher],
+plistlib.dump({"Label": label, "ProgramArguments": [launcher],
                "EnvironmentVariables": {"MPH_VIA_LAUNCHD": "1"}, "RunAtLoad": run_at_load,
                "ProcessType": "Interactive"}, open(path, "wb"))
 AGENTPY
-launchctl bootout "gui/$(id -u)/com.mujhepatahai.agent" 2>/dev/null || true
+launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
 launchctl bootstrap "gui/$(id -u)" "$AGENT"
-launchctl kickstart "gui/$(id -u)/com.mujhepatahai.agent" 2>/dev/null || true
+launchctl kickstart "gui/$(id -u)/$LABEL" 2>/dev/null || true
 cat <<DONE
 
-${green}${bold}  Ho gaya ✓${reset}  Click the ${bold}👁${reset} in your menu bar and flip the switch.
+${green}${bold}  Ho gaya ✓${reset}  Click the ${bold}eye${reset} in your menu bar and flip the switch.
   ${dim}Allow the microphone when macOS asks. Run this command again to update.${reset}
 
 DONE

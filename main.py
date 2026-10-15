@@ -1,4 +1,4 @@
-"""Mujhe Pata Hai — terminal version with the rich dashboard. For the menu bar app run `python app.py`."""
+"""Side Eye — terminal version with the rich dashboard. For the menu bar app run `python app.py`."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ console = Console()
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Mujhe Pata Hai — voice focus buddy powered by Sarvam AI")
+    p = argparse.ArgumentParser(description="Side Eye — voice focus buddy powered by Sarvam AI")
     p.add_argument("--persona", choices=list(PERSONAS), default="mummy")
     p.add_argument("--mode", choices=["demo", "real"], default="demo", help="timer preset (default: demo)")
     p.add_argument("--volume", choices=list(VOLUMES), default="Normal")
@@ -60,7 +60,7 @@ def run_terminal(client: SarvamClient, args: argparse.Namespace) -> None:
     finally:
         engine.stop()
         console.print(
-            f"\n[bold red]मुझे पता है[/] signing off. caught {status.caught}× · "
+            f"\n[bold red]Side Eye[/] signing off. caught {status.caught}× · "
             f"excuses {status.excuses} · confessions {status.confessions} · comebacks {status.comebacks} · "
             f"lies caught {status.lies}"
         )

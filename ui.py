@@ -149,7 +149,7 @@ def _header(st: Status) -> Table:
     t.add_column()
     t.add_column(justify="right")
     t.add_row(
-        Text.assemble(("  मुझे पता है ", "bold white on red"), ("  Mujhe Pata Hai", "bold red"), ("  · your voice focus buddy", "grey62")),
+        Text.assemble(("  Side Eye ", "bold white on red"), ("  · your voice focus buddy", "grey62")),
         Text.assemble(
             ("persona ", "grey62"), (f"{st.persona.title}", "bold magenta"),
             ("  voice ", "grey62"), (st.speaker, "magenta"),

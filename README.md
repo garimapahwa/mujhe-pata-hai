@@ -1,12 +1,14 @@
-# मुझे पता है · Mujhe Pata Hai
+# Side Eye
+
+*"मुझे पता है।"*
 
 **A voice focus buddy for macOS. It catches you slacking, nags you in Hinglish, listens to your excuse, and talks back.**
 
-**Website:** https://garimapahwa.github.io/mujhe-pata-hai · _Demo video: coming soon_ <!-- drop demo.gif / YouTube link here -->
+**Website:** https://garimapahwa.github.io/side-eye · _Demo video: coming soon_ <!-- drop demo.gif / YouTube link here -->
 
 ```bash
 # install (macOS, no admin password) — the eye icon appears in your menu bar
-curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash
+curl -fsSL https://garimapahwa.github.io/side-eye/install.sh | bash
 ```
 
 Go idle while you're supposed to be working and an Indian mummy calls you out, out loud. Answer her ("nahi nahi, padh rahi hoon") and she *understands* you, stays suspicious, and comes back later asking whether that reading is done yet. Claim you're studying while Taarak Mehta is playing in Chrome and she checks your screen: *"पढ़ाई? Screen पे तो Taarak Mehta चल रहा है! मुझे सब पता है।"* Stay silent and she gets louder, faster and more dramatic. Get back to real work and she stops mid-sentence: *"आ गई? Good. काम करो।"*
@@ -36,14 +38,14 @@ Built for the **Sarvam Bulbul Build Challenge**. It uses only Sarvam AI models: 
 
 ## Quick start
 
-**Easiest:** run the one-line installer above. It sets up Python, downloads the app, asks for your key and puts **Mujhe Pata Hai.app** in `~/Applications`. Run it again to update; add `-s -- --uninstall` after `bash` to remove it.
+**Easiest:** run the one-line installer above. It sets up Python, downloads the app, asks for your key and puts **Side Eye.app** in `~/Applications`. Run it again to update; add `-s -- --uninstall` after `bash` to remove it.
 
 **From source:**
 
 ```bash
 # 1. Get the code
-git clone <this-repo-url> mujhe-pata-hai
-cd mujhe-pata-hai
+git clone https://github.com/garimapahwa/side-eye.git
+cd side-eye
 
 # 2. Create a virtual environment and install dependencies
 python3.11 -m venv .venv
@@ -61,7 +63,7 @@ python main.py    # or: terminal version with the full dashboard
 
 Now take your hands off the keyboard and trackpad for 8 seconds. 
 
-**Every new terminal window** needs `cd mujhe-pata-hai && source .venv/bin/activate` before `python main.py`. Without it you'll see `command not found: python`.
+**Every new terminal window** needs `cd side-eye && source .venv/bin/activate` before `python main.py`. Without it you'll see `command not found: python`.
 
 ### macOS permissions (one-time)
 

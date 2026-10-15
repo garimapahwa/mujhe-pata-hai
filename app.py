@@ -1,4 +1,4 @@
-"""Mujhe Pata Hai — menu bar app: an eye icon; the menu has an on/off switch and a voice picker.
+"""Side Eye — menu bar app: an eye icon; the menu has an on/off switch and a voice picker.
 
 Run: python app.py          (use --on to start switched on)
 """
@@ -42,11 +42,11 @@ from config import PERSONAS
 from engine import Engine
 from sarvam_client import SarvamClient, SarvamError
 
-APP_NAME = "Mujhe Pata Hai"
-SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "MujhePataHai"
+APP_NAME = "Side Eye"
+SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "SideEye"
 PREFS_PATH = SUPPORT_DIR / "prefs.json"
-LOGIN_AGENT = Path.home() / "Library" / "LaunchAgents" / "com.mujhepatahai.agent.plist"
-STATUS_NAME = "MujhePataHai"
+LOGIN_AGENT = Path.home() / "Library" / "LaunchAgents" / "com.sideeye.agent.plist"
+STATUS_NAME = "SideEye"
 DEFAULT_PREFS: dict[str, Any] = {"persona": "mummy", "idle": 8, "volume": 1.0, "screen": True, "enabled": False}
 MENU_WIDTH = 210
 MENU_FONT = 11.5  # smaller than the default, so rows and their hover highlight are shorter
@@ -96,7 +96,7 @@ def set_launch_at_login(on: bool) -> None:
     """The installer's launchd job starts the app; this only flips whether it also runs at login."""
     agent = _agent()
     if not agent:  # running from source: create a job that runs this checkout
-        agent = {"Label": "com.mujhepatahai.agent", "ProgramArguments": [sys.executable, str(config.ROOT / "app.py")],
+        agent = {"Label": "com.sideeye.agent", "ProgramArguments": [sys.executable, str(config.ROOT / "app.py")],
                  "EnvironmentVariables": {"MPH_VIA_LAUNCHD": "1"}}
     agent["RunAtLoad"] = on
     LOGIN_AGENT.parent.mkdir(parents=True, exist_ok=True)
