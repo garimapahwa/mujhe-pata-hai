@@ -16,6 +16,7 @@ from typing import Any, Callable, Optional
 
 import objc
 from AppKit import (
+    NSFontDescriptorSystemDesignRounded,
     NSAlert,
     NSApplication,
     NSApplicationActivationPolicyAccessory,
@@ -46,14 +47,16 @@ SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "MujhePataHai"
 PREFS_PATH = SUPPORT_DIR / "prefs.json"
 LOGIN_AGENT = Path.home() / "Library" / "LaunchAgents" / "com.mujhepatahai.agent.plist"
 STATUS_NAME = "MujhePataHai"
-DEFAULT_PREFS: dict[str, Any] = {"persona": "mummy", "mode": "demo", "volume": 1.0, "screen": True, "enabled": False}
+DEFAULT_PREFS: dict[str, Any] = {"persona": "mummy", "idle": 8, "volume": 1.0, "screen": True, "enabled": False}
 MENU_WIDTH = 210
-MENU_FONT = 12.0  # smaller than the default, so rows and their hover highlight are shorter
+MENU_FONT = 11.5  # smaller than the default, so rows and their hover highlight are shorter
 VOICE_GROUPS = {
     "Family": ["mummy", "papa", "dadi", "didi"],
     "Friends & Work": ["dost", "teacher", "boss"],
     "Filmy": ["filmy", "action", "detective", "news", "commentator"],
 }
+IDLE_CHOICES = {8: "8 seconds", 30: "30 seconds", 60: "1 minute", 120: "2 minutes", 300: "5 minutes",
+                600: "10 minutes", 900: "15 minutes", 1800: "30 minutes"}
 
 
 # ------------------------------------------------------------------ prefs / key
@@ -125,10 +128,24 @@ class _Action(NSObject):
         self.cb(sender)
 
 
+def rounded(size: float, weight: float = 0.0) -> NSFont:
+    """SF Pro Rounded: softer than the default menu font."""
+    base = NSFont.systemFontOfSize_weight_(size, weight)
+    desc = base.fontDescriptor().fontDescriptorWithDesign_(NSFontDescriptorSystemDesignRounded)
+    return NSFont.fontWithDescriptor_size_(desc, size) if desc else base
+
+
+def submenu() -> NSMenu:
+    menu = NSMenu.alloc().init()
+    menu.setFont_(rounded(MENU_FONT))
+    menu.setAutoenablesItems_(False)
+    return menu
+
+
 def section_header(title: str) -> NSMenuItem:
     """Small grey heading, like Rustyvibes' "Soundpack" / "Linear"."""
     item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, None, "")
-    attrs = {NSFontAttributeName: NSFont.systemFontOfSize_weight_(10.5, 0.3), NSForegroundColorAttributeName: NSColor.secondaryLabelColor()}
+    attrs = {NSFontAttributeName: rounded(10, 0.3), NSForegroundColorAttributeName: NSColor.secondaryLabelColor()}
     item.setAttributedTitle_(NSAttributedString.alloc().initWithString_attributes_(title, attrs))
     item.setEnabled_(False)
     return item
@@ -169,7 +186,7 @@ class MenuBarApp:
         head = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, MENU_WIDTH, 32))
         name = NSTextField.labelWithString_(APP_NAME)
         name.setFrame_(NSMakeRect(14, 8, 140, 16))
-        name.setFont_(NSFont.boldSystemFontOfSize_(MENU_FONT))
+        name.setFont_(rounded(MENU_FONT, 0.4))
         head.addSubview_(name)
         self.switch = NSSwitch.alloc().initWithFrame_(NSMakeRect(MENU_WIDTH - 46, 7, 32, 18))
         self.switch.setControlSize_(1)  # NSControlSizeSmall
@@ -178,16 +195,12 @@ class MenuBarApp:
         head.addSubview_(self.switch)
         item = NSMenuItem.alloc().init()
         item.setView_(head)
-        menu = NSMenu.alloc().init()
-        menu.setFont_(NSFont.menuFontOfSize_(MENU_FONT))
-        menu.setAutoenablesItems_(False)
+        menu = submenu()
         menu.addItem_(item)
         menu.addItem_(NSMenuItem.separatorItem())
 
         self.voice_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Voices", None, "")
-        voices = NSMenu.alloc().init()
-        voices.setFont_(NSFont.menuFontOfSize_(MENU_FONT))
-        voices.setAutoenablesItems_(False)
+        voices = submenu()
         self.voice_items: dict[str, NSMenuItem] = {}
         for i, (group, keys) in enumerate(VOICE_GROUPS.items()):
             if i:
@@ -202,6 +215,18 @@ class MenuBarApp:
                 voices.addItem_(v)
         self.voice_item.setSubmenu_(voices)
         menu.addItem_(self.voice_item)
+
+        idle_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Remind After", None, "")
+        idle = submenu()
+        idle.addItem_(section_header("Idle for"))
+        self.idle_items: dict[int, NSMenuItem] = {}
+        for secs, label in IDLE_CHOICES.items():
+            v = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(label, "fire:", "")
+            v.setTarget_(self._target(lambda _s, n=secs: self.on_pick_idle(n)))
+            self.idle_items[secs] = v
+            idle.addItem_(v)
+        idle_item.setSubmenu_(idle)
+        menu.addItem_(idle_item)
         menu.addItem_(NSMenuItem.separatorItem())
 
         self.login_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Launch at Login", "fire:", "")
@@ -227,6 +252,8 @@ class MenuBarApp:
     def _refresh_voice(self) -> None:
         for key, item in self.voice_items.items():
             item.setState_(int(key == self.prefs["persona"]))
+        for secs, item in self.idle_items.items():
+            item.setState_(int(secs == self.prefs["idle"]))
 
     # ---------------------------------------------------------------- engine plumbing
     @property
@@ -243,11 +270,13 @@ class MenuBarApp:
         except SarvamError:
             return self.ask_api_key()
 
-    def _start_engine(self) -> None:
+    def _start_engine(self, hello: bool = True) -> None:
         try:
-            p = self.prefs["persona"]
-            self.engine.start(p, self.prefs["mode"], screen=self.prefs["screen"], volume=self.prefs["volume"], log=lambda _m: None)
-            self.engine.preview(p, self.prefs["volume"])  # she says hello, so you know it's on
+            p, idle = self.prefs["persona"], float(self.prefs["idle"])
+            mode = "demo" if idle < 60 else "real"  # short waits get the snappy demo timers for everything else too
+            self.engine.start(p, mode, screen=self.prefs["screen"], volume=self.prefs["volume"], log=lambda _m: None, idle=idle)
+            if hello:
+                self.engine.preview(p, self.prefs["volume"])  # she says hello, so you know it's on
         except Exception:  # never let a background error kill the menu bar app
             pass
         finally:
@@ -279,6 +308,14 @@ class MenuBarApp:
             threading.Thread(target=self._start_engine, daemon=True).start()  # restart with the new voice
         else:
             threading.Thread(target=self._preview, args=(key,), daemon=True).start()
+
+    def on_pick_idle(self, secs: int) -> None:
+        self.prefs["idle"] = secs
+        save_prefs(self.prefs)
+        self._refresh_voice()
+        if self.running and not self.busy:
+            self.busy = True
+            threading.Thread(target=self._start_engine, args=(False,), daemon=True).start()  # restart quietly
 
     def _preview(self, key: str) -> None:
         try:

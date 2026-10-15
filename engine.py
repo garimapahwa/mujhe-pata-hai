@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Optional
@@ -104,11 +105,18 @@ class Engine:
             self._speakers[persona.key] = resolve_speaker(self.client, persona, log)
         return self._speakers[persona.key]
 
-    def start(self, persona_key: str, mode: str, screen: bool = True, volume: float = 1.0, log: LogFn = print) -> Status:
+    def start(
+        self, persona_key: str, mode: str, screen: bool = True, volume: float = 1.0, log: LogFn = print,
+        idle: Optional[float] = None,
+    ) -> Status:
+        """`idle` (seconds) overrides how long you can sit idle before the first nag."""
         with self._lock:
             self.stop()
             persona = PERSONAS[persona_key]
-            status = Status(persona=persona, mode=mode, timings=config.timings_for(mode))
+            timings = config.timings_for(mode)
+            if idle:
+                timings = dataclasses.replace(timings, idle_threshold=idle)
+            status = Status(persona=persona, mode=mode, timings=timings)
             status.speaker = self.speaker_for(persona, log)
             voice = Voice(self.client, status.speaker, status)
             warm_cache(voice, persona, volume, log)
