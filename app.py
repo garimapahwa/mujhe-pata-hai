@@ -106,10 +106,10 @@ def set_launch_at_login(on: bool) -> None:
 def place_icon_on_the_right(prefs: dict[str, Any]) -> None:
     """New menu bar icons land on the far left, where a busy app's menus (or the notch) hide them.
     Seed a position near the system icons once; after that macOS remembers wherever you ⌘-drag it."""
-    if prefs.get("icon_placed"):
+    if prefs.get("icon_placed") == STATUS_NAME:  # per name, so a rename gets placed again
         return
     NSUserDefaults.standardUserDefaults().setDouble_forKey_(100.0, f"NSStatusItem Preferred Position {STATUS_NAME}")
-    prefs["icon_placed"] = True
+    prefs["icon_placed"] = STATUS_NAME
     save_prefs(prefs)
 
 
