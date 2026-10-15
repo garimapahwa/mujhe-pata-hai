@@ -33,26 +33,24 @@
   .eye.off svg { opacity: .45; }
 
   .menu, .sub { position: absolute; background: rgba(246, 240, 235, .96); border: 1.5px solid var(--navy); border-radius: 9px; padding: 5px;
-    box-shadow: 3px 3px 0 rgba(46, 44, 69, .9); font: 10.5px ui-rounded, "SF Pro Rounded", -apple-system, sans-serif; }
-  .menu { top: 30px; right: 56px; width: 172px; }
-  .sub { right: 232px; width: 128px; display: none; } .sub.open { display: block; }
-  #voices { top: 62px; } #timer { top: 80px; }
-  .sub .row { height: 17px; } .sub .label { padding-top: 3px; }
-  .row.opens { cursor: pointer; }
-  .row { display: flex; align-items: center; justify-content: space-between; height: 19px; padding: 0 8px 0 18px; border-radius: 5px; position: relative; cursor: default; }
-  .row.head { height: 26px; padding-left: 8px; font-weight: 700; }
+    box-shadow: 3px 3px 0 rgba(46, 44, 69, .9); font: 11.5px ui-rounded, "SF Pro Rounded", -apple-system, sans-serif; }
+  .menu { top: 30px; right: 56px; width: 196px; }
+  .sub { top: 66px; right: 256px; width: 150px; }
+  .sub .row { height: 19px; } .sub .label { padding-top: 3px; }
+  .row { display: flex; align-items: center; justify-content: space-between; height: 22px; padding: 0 8px 0 18px; border-radius: 5px; position: relative; cursor: default; }
+  .row.head { height: 30px; padding-left: 8px; font-weight: 700; }
   .row.hl { background: var(--navy); color: var(--cream); }
   .row.pick { cursor: pointer; } .row.pick:hover { background: rgba(46, 44, 69, .1); }
-  .row.on::before { content: "✓"; position: absolute; left: 5px; font-size: 10px; }
+  .row.on::before { content: "✓"; position: absolute; left: 5px; font-size: 11px; }
   .row .k { opacity: .45; }
-  .label { padding: 5px 8px 2px; font-size: 9.5px; font-weight: 600; opacity: .45; }
+  .label { padding: 5px 8px 2px; font-size: 10.5px; font-weight: 600; opacity: .45; }
   hr { border: 0; border-top: 1px solid rgba(46, 44, 69, .15); margin: 4px 6px; }
-  .sw { width: 24px; height: 14px; border-radius: 7px; background: rgba(46, 44, 69, .2); position: relative; cursor: pointer; transition: background .2s; }
-  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: #fff; transition: left .2s; }
-  .sw.on { background: var(--navy); } .sw.on::after { left: 12px; }
+  .sw { width: 28px; height: 16px; border-radius: 8px; background: rgba(46, 44, 69, .2); position: relative; cursor: pointer; transition: background .2s; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: left .2s; }
+  .sw.on { background: var(--navy); } .sw.on::after { left: 14px; }
 
   .hero { position: absolute; left: 30px; bottom: 28px; width: 190px; color: var(--cream); }
-  .hero h1 { margin: 0; font: italic 400 66px/.95 "Instrument Serif", Georgia, serif; letter-spacing: -1px; text-shadow: 2px 2px 0 rgba(46, 44, 69, .25); }
+  .hero h1 { margin: 0; font: italic 400 44px/1 "Instrument Serif", Georgia, serif; letter-spacing: -1px; text-shadow: 2px 2px 0 rgba(46, 44, 69, .25); }
   .hero p { margin: 10px 0 0; min-height: 40px; font-size: 13px; line-height: 1.5; color: var(--navy); opacity: .85; }
 
   .foot { padding: 14px; }
@@ -76,8 +74,8 @@
         <div class="menu">
           <div class="row head">Mujhe Pata Hai <span class="sw" id="sw" role="switch" aria-checked="false" title="Turn on"></span></div>
           <hr>
-          <div class="row opens" data-sub="voices">Voices <span>›</span></div>
-          <div class="row opens" data-sub="timer">Remind After <span>›</span></div>
+          <div class="row hl">Voices <span>›</span></div>
+          <div class="row">Remind After <span>›</span></div>
           <hr>
           <div class="row on">Launch at Login</div>
           <hr>
@@ -85,11 +83,10 @@
         </div>
 
         <div class="sub" id="voices"></div>
-        <div class="sub" id="timer"><div class="label">Idle for</div></div>
 
         <div class="hero">
           <h1>Mujhe<br>Pata Hai.</h1>
-          <p id="line"></p>
+          <p id="line">The voice that knows when you're slacking.</p>
         </div>
       </div>
     </div>
@@ -133,31 +130,8 @@
 
   function setOn(on) {
     sw.classList.toggle("on", on); sw.setAttribute("aria-checked", on); eye.classList.toggle("off", !on);
-    if (on) { open("voices"); speak(current); } else { audio.pause(); open(openSub); }
+    if (on) speak(current); else { audio.pause(); line.textContent = "The voice that knows when you're slacking."; }
   }
-  // the "Remind After" submenu: how long you can sit idle before the first reminder
-  const TIMES = ["8 seconds", "30 seconds", "1 minute", "2 minutes", "5 minutes", "10 minutes", "15 minutes", "30 minutes"];
-  let idle = "8 seconds", openSub = "timer";
-  const timer = $("timer");
-  TIMES.forEach(t => timer.insertAdjacentHTML("beforeend", `<div class="row pick${t === idle ? " on" : ""}" data-t="${t}">${t}</div>`));
-  timer.addEventListener("click", e => {
-    const r = e.target.closest(".pick"); if (!r) return;
-    idle = r.dataset.t; timer.querySelectorAll(".pick").forEach(x => x.classList.toggle("on", x === r)); open("timer");
-  });
-
-  function open(sub) {
-    openSub = sub;
-    document.querySelectorAll(".opens").forEach(r => r.classList.toggle("hl", r.dataset.sub === sub));
-    document.querySelectorAll(".sub").forEach(m => m.classList.toggle("open", m.id === sub));
-    if (sub === "timer") line.textContent = `Reminds you after ${idle} of doing nothing.`;
-    else if (audio.paused) line.textContent = "Pick a voice to hear it.";
-  }
-  document.querySelectorAll(".opens").forEach(r => {
-    r.addEventListener("mouseenter", () => open(r.dataset.sub));
-    r.addEventListener("click", () => open(r.dataset.sub));
-  });
-  open("timer");
-
   sw.addEventListener("click", () => setOn(!sw.classList.contains("on")));
   eye.classList.add("off");
 
