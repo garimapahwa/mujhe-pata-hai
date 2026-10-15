@@ -2,10 +2,10 @@
 
 **A voice focus buddy for macOS. It catches you slacking, nags you in Hinglish, listens to your excuse, and talks back.**
 
-🌐 **Website:** https://garimapahwa.github.io/mujhe-pata-hai · 🎬 _Demo video: coming soon_ <!-- drop demo.gif / YouTube link here -->
+**Website:** https://garimapahwa.github.io/mujhe-pata-hai · _Demo video: coming soon_ <!-- drop demo.gif / YouTube link here -->
 
 ```bash
-# install (macOS, no admin password) — the 👁 appears in your menu bar
+# install (macOS, no admin password) — the eye icon appears in your menu bar
 curl -fsSL https://garimapahwa.github.io/mujhe-pata-hai/install.sh | bash
 ```
 
@@ -17,15 +17,15 @@ Built for the **Sarvam Bulbul Build Challenge**. It uses only Sarvam AI models: 
 
 ## Features
 
-- 🗣 **Talks and listens.** Spoken nags in natural Hinglish, and it understands your spoken reply (excuse, confession, "I'm back", or gibberish).
-- 👀 **Sees what's on screen.** It reads the focused app and the active Chrome/Safari tab, names what you're watching, and catches lies. It works across a second monitor too.
-- 🖱 **Can't be fooled by mouse wiggling.** Scrolling YouTube counts as distraction. Only activity in a work app (VS Code, Terminal, docs…) counts as being back.
-- 📈 **Escalates with voice prosody.** Three levels using Bulbul's pace, pitch and loudness: teasing → annoyed → *full drama*.
-- 🎭 **Twelve characters.** Mummy, Papa, Dadi, Didi, a Gen-Z dost, a class teacher, a corporate boss, a filmy narrator, an action hero, a detective, a news anchor and a cricket commentator (all original, no celebrity voices).
-- 👁 **Lives in the menu bar.** An eye icon that starts with your Mac and stays until you quit. Click it for an on/off switch, a voice picker, Launch at Login and Quit.
-- ⚡ **Fast.** The first audio plays in about 100–200 ms, and common lines are pre-cached so the first nag is instant.
-- 🛟 **Never goes silent.** If the LLM is slow or down, a local keyword classifier and built-in line banks take over.
-- 📺 **Live terminal dashboard.** It shows state, idle and distraction timers, escalation level, what you said, detected intent, latency and a session tally.
+- **Talks and listens.** Spoken nags in natural Hinglish, and it understands your spoken reply (excuse, confession, "I'm back", or gibberish).
+- **Sees what's on screen.** It reads the focused app and the active Chrome/Safari tab, names what you're watching, and catches lies. It works across a second monitor too.
+- **Can't be fooled by mouse wiggling.** Scrolling YouTube counts as distraction. Only activity in a work app (VS Code, Terminal, docs…) counts as being back.
+- **Escalates with voice prosody.** Three levels using Bulbul's pace, pitch and loudness: teasing → annoyed → *full drama*.
+- **Twelve characters.** Mummy, Papa, Dadi, Didi, a Gen-Z dost, a class teacher, a corporate boss, a filmy narrator, an action hero, a detective, a news anchor and a cricket commentator (all original, no celebrity voices).
+- **Lives in the menu bar.** An eye icon that starts with your Mac and stays until you quit. Click it for an on/off switch, a voice picker, Launch at Login and Quit.
+- **Fast.** The first audio plays in about 100–200 ms, and common lines are pre-cached so the first nag is instant.
+- **Never goes silent.** If the LLM is slow or down, a local keyword classifier and built-in line banks take over.
+- **Live terminal dashboard.** It shows state, idle and distraction timers, escalation level, what you said, detected intent, latency and a session tally.
 
 ## Requirements
 
@@ -59,7 +59,7 @@ python app.py     # menu bar app (eye icon + on/off switch)
 python main.py    # or: terminal version with the full dashboard
 ```
 
-Now take your hands off the keyboard and trackpad for 8 seconds. 🙂
+Now take your hands off the keyboard and trackpad for 8 seconds. 
 
 **Every new terminal window** needs `cd mujhe-pata-hai && source .venv/bin/activate` before `python main.py`. Without it you'll see `command not found: python`.
 
@@ -77,7 +77,7 @@ No Accessibility or Screen Recording permission is needed.
 With `python main.py` running in demo mode:
 
 1. **Go idle** (hands off for 8 s). Mummy catches you. If YouTube or Netflix is open, she names it.
-2. When the badge says **LISTENING 🎙**, say *"nahi nahi, padh rahi hoon"*.
+2. When the badge says **LISTENING**, say *"nahi nahi, padh rahi hoon"*.
    - If a distraction is on screen, she busts the lie and gets louder.
    - Otherwise: *"अच्छा अच्छा… okay."*, then she comes back 12 s later, suspicious about your excuse.
 3. Say *"sorry, phone chala rahi thi"*. She forgives you, and you're back to WORKING.
@@ -190,7 +190,7 @@ Test each piece on its own:
 python -m sarvam_client   # speaks one line, prints time-to-first-audio
 python -m idle            # live idle seconds
 python -m audio           # record yourself, then hear it back
-python -m screen          # what the app sees (app + tab), 🚨 for distractions
+python -m screen          # what the app sees (app + tab), flags distractions
 ```
 
 ## Website
