@@ -47,7 +47,8 @@ PREFS_PATH = SUPPORT_DIR / "prefs.json"
 LOGIN_AGENT = Path.home() / "Library" / "LaunchAgents" / "com.mujhepatahai.agent.plist"
 STATUS_NAME = "MujhePataHai"
 DEFAULT_PREFS: dict[str, Any] = {"persona": "mummy", "mode": "demo", "volume": 1.0, "screen": True, "enabled": False}
-MENU_WIDTH = 240
+MENU_WIDTH = 210
+MENU_FONT = 12.0  # smaller than the default, so rows and their hover highlight are shorter
 VOICE_GROUPS = {
     "Family": ["mummy", "papa", "dadi", "didi"],
     "Friends & Work": ["dost", "teacher", "boss"],
@@ -127,7 +128,7 @@ class _Action(NSObject):
 def section_header(title: str) -> NSMenuItem:
     """Small grey heading, like Rustyvibes' "Soundpack" / "Linear"."""
     item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, None, "")
-    attrs = {NSFontAttributeName: NSFont.systemFontOfSize_weight_(11.5, 0.3), NSForegroundColorAttributeName: NSColor.secondaryLabelColor()}
+    attrs = {NSFontAttributeName: NSFont.systemFontOfSize_weight_(10.5, 0.3), NSForegroundColorAttributeName: NSColor.secondaryLabelColor()}
     item.setAttributedTitle_(NSAttributedString.alloc().initWithString_attributes_(title, attrs))
     item.setEnabled_(False)
     return item
@@ -165,24 +166,27 @@ class MenuBarApp:
 
     def _build_menu(self) -> NSMenu:
         """The app's name + switch, then the voice picker."""
-        head = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, MENU_WIDTH, 40))
+        head = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, MENU_WIDTH, 32))
         name = NSTextField.labelWithString_(APP_NAME)
-        name.setFrame_(NSMakeRect(16, 10, 160, 20))
-        name.setFont_(NSFont.boldSystemFontOfSize_(13.5))
+        name.setFrame_(NSMakeRect(14, 8, 140, 16))
+        name.setFont_(NSFont.boldSystemFontOfSize_(MENU_FONT))
         head.addSubview_(name)
-        self.switch = NSSwitch.alloc().initWithFrame_(NSMakeRect(MENU_WIDTH - 58, 8, 42, 24))
+        self.switch = NSSwitch.alloc().initWithFrame_(NSMakeRect(MENU_WIDTH - 46, 7, 32, 18))
+        self.switch.setControlSize_(1)  # NSControlSizeSmall
         self.switch.setTarget_(self._target(self.on_switch))
         self.switch.setAction_("fire:")
         head.addSubview_(self.switch)
         item = NSMenuItem.alloc().init()
         item.setView_(head)
         menu = NSMenu.alloc().init()
+        menu.setFont_(NSFont.menuFontOfSize_(MENU_FONT))
         menu.setAutoenablesItems_(False)
         menu.addItem_(item)
         menu.addItem_(NSMenuItem.separatorItem())
 
         self.voice_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Voices", None, "")
         voices = NSMenu.alloc().init()
+        voices.setFont_(NSFont.menuFontOfSize_(MENU_FONT))
         voices.setAutoenablesItems_(False)
         self.voice_items: dict[str, NSMenuItem] = {}
         for i, (group, keys) in enumerate(VOICE_GROUPS.items()):
