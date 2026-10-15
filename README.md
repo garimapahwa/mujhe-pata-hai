@@ -21,7 +21,7 @@ Built for the **Sarvam Bulbul Build Challenge**. It uses only Sarvam AI models: 
 - 👀 **Sees what's on screen.** It reads the focused app and the active Chrome/Safari tab, names what you're watching, and catches lies. It works across a second monitor too.
 - 🖱 **Can't be fooled by mouse wiggling.** Scrolling YouTube counts as distraction. Only activity in a work app (VS Code, Terminal, docs…) counts as being back.
 - 📈 **Escalates with voice prosody.** Three levels using Bulbul's pace, pitch and loudness: teasing → annoyed → *full drama*.
-- 🎭 **Five characters.** Strict mummy, Gen-Z dost, live cricket commentator, a deep-voiced filmy narrator and a table-thumping action hero (all original, no celebrity voices).
+- 🎭 **Twelve characters.** Mummy, Papa, Dadi, Didi, a Gen-Z dost, a class teacher, a corporate boss, a filmy narrator, an action hero, a detective, a news anchor and a cricket commentator (all original, no celebrity voices).
 - 👁 **Lives in the menu bar.** An eye icon that starts with your Mac and stays until you quit. Click it for an on/off switch, a voice picker, Launch at Login and Quit.
 - ⚡ **Fast.** The first audio plays in about 100–200 ms, and common lines are pre-cached so the first nag is instant.
 - 🛟 **Never goes silent.** If the LLM is slow or down, a local keyword classifier and built-in line banks take over.
@@ -111,6 +111,13 @@ Press **Ctrl+C** to quit.
 | `filmy` | `anand_hi_documentary` (pitched down) | Deep, dramatic baritone. *"देवियों और सज्जनों… keyboard ख़ामोश है।"* |
 | `action` | `shubh_hi_stories_dramatic` | Loud, table-thumping hero. *"बस! अब मैं table तोड़ दूँगा!"* |
 | `commentator` | `ratan_hi_customer_expressive` | *"और ये गई focus boundary के पार! Phone ने एक और wicket लिया!"* |
+| `papa` | `ashok_hi_character` | Few words, maximum disappointment. *"बस! अब मैं wifi का password बदल दूँगा!"* |
+| `dadi` | `roopa_hi_companion` | Sweet emotional blackmail. *"अब तो मैं तेरी मम्मी को बता दूँगी!"* |
+| `didi` | `sanchita_hi_social` | Bossy elder sister. *"Screenshot ले लिया है। Proof मेरे पास है।"* |
+| `teacher` | `ritu_hi_edtech` | Class teacher. *"Diary में note लिख दूँ? Parents sign करेंगे।"* |
+| `boss` | `aditya_hi_sales` | Corporate jargon. *"Hi, quick sync? Keyboard पे कोई activity नहीं दिख रही।"* |
+| `news` | `simran_hi_news_breaking` | Breaking news. *"देश जानना चाहता है, phone क्यों?"* |
+| `detective` | `mukul_hi_suspense` | Slow suspense. *"सन्नाटा… keyboard ख़ामोश… और एक phone, जो अभी भी गर्म है।"* |
 
 Voices are checked at startup. If Sarvam ever retires one, the app automatically picks the closest available voice (same language and style). To change a voice, edit `speakers` for that persona in `config.py`.
 

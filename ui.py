@@ -128,7 +128,7 @@ def _dialogue(st: Status) -> Panel:
     t = Table.grid(padding=(0, 1))
     t.add_column(width=12, style="bold")
     t.add_column()
-    t.add_row(Text(f"{st.persona.emoji} {st.persona.title}", style="bold magenta"), Text(st.last_bot or "…", style="bold white"))
+    t.add_row(Text(f"{st.persona.title}", style="bold magenta"), Text(st.last_bot or "…", style="bold white"))
     t.add_row(Text("🗣  You said", style="bold cyan"), Text(st.last_heard or "…", style="italic cyan"))
     intent = Text(st.intent or "—", style="bold yellow")
     if st.intent_source:
@@ -151,7 +151,7 @@ def _header(st: Status) -> Table:
     t.add_row(
         Text.assemble(("  मुझे पता है ", "bold white on red"), ("  Mujhe Pata Hai", "bold red"), ("  · your voice focus buddy", "grey62")),
         Text.assemble(
-            ("persona ", "grey62"), (f"{st.persona.emoji} {st.persona.title}", "bold magenta"),
+            ("persona ", "grey62"), (f"{st.persona.title}", "bold magenta"),
             ("  voice ", "grey62"), (st.speaker, "magenta"),
             ("  mode ", "grey62"), (st.mode.upper(), "bold yellow" if st.mode == "demo" else "bold green"),
             ("  ", ""),

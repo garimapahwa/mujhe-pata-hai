@@ -48,7 +48,11 @@ LOGIN_AGENT = Path.home() / "Library" / "LaunchAgents" / "com.mujhepatahai.agent
 STATUS_NAME = "MujhePataHai"
 DEFAULT_PREFS: dict[str, Any] = {"persona": "mummy", "mode": "demo", "volume": 1.0, "screen": True, "enabled": False}
 MENU_WIDTH = 240
-VOICE_GROUPS = {"Home": ["mummy"], "Friends": ["dost"], "Filmy": ["filmy", "action", "commentator"]}
+VOICE_GROUPS = {
+    "Family": ["mummy", "papa", "dadi", "didi"],
+    "Friends & Work": ["dost", "teacher", "boss"],
+    "Filmy": ["filmy", "action", "detective", "news", "commentator"],
+}
 
 
 # ------------------------------------------------------------------ prefs / key
@@ -177,8 +181,7 @@ class MenuBarApp:
         menu.addItem_(item)
         menu.addItem_(NSMenuItem.separatorItem())
 
-        menu.addItem_(section_header("Voice"))
-        self.voice_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", None, "")
+        self.voice_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Voices", None, "")
         voices = NSMenu.alloc().init()
         voices.setAutoenablesItems_(False)
         self.voice_items: dict[str, NSMenuItem] = {}
@@ -188,7 +191,7 @@ class MenuBarApp:
             voices.addItem_(section_header(group))
             for key in keys:
                 p = PERSONAS[key]
-                v = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{p.emoji}  {p.title}", "fire:", "")
+                v = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(p.title, "fire:", "")
                 v.setTarget_(self._target(lambda _s, k=key: self.on_pick_voice(k)))
                 v.setToolTip_(p.tagline)
                 self.voice_items[key] = v
@@ -218,8 +221,6 @@ class MenuBarApp:
         NSApplication.sharedApplication().terminate_(None)
 
     def _refresh_voice(self) -> None:
-        p = PERSONAS[self.prefs["persona"]]
-        self.voice_item.setTitle_(f"{p.emoji}  {p.title}")
         for key, item in self.voice_items.items():
             item.setState_(int(key == self.prefs["persona"]))
 
