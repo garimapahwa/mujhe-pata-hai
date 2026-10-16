@@ -1,11 +1,11 @@
-"""What the menu bar app (macOS) and the tray app (Windows) share: settings, the API key, and the
-engine's on/off, voice and idle-time controls. No UI code here."""
+"""The menu bar app's non-UI side: settings, the API key, and the engine's on/off, voice and
+idle-time controls."""
 
 from __future__ import annotations
 
+import fcntl
 import json
 import os
-import sys
 import threading
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -15,10 +15,7 @@ from engine import Engine
 from sarvam_client import SarvamClient, SarvamError
 
 APP_NAME = "Side Eye"
-if sys.platform == "win32":
-    SUPPORT_DIR = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "SideEye"
-else:
-    SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "SideEye"
+SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "SideEye"
 PREFS_PATH = SUPPORT_DIR / "prefs.json"
 DEFAULT_PREFS: dict[str, Any] = {"persona": "mummy", "idle": 8, "volume": 1.0, "screen": True, "enabled": False}
 VOICE_GROUPS = {
@@ -60,14 +57,7 @@ def already_running() -> bool:
     SUPPORT_DIR.mkdir(parents=True, exist_ok=True)
     _LOCK = open(SUPPORT_DIR / "app.lock", "w")
     try:
-        if sys.platform == "win32":
-            import msvcrt
-
-            msvcrt.locking(_LOCK.fileno(), msvcrt.LK_NBLCK, 1)
-        else:
-            import fcntl
-
-            fcntl.flock(_LOCK, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.flock(_LOCK, fcntl.LOCK_EX | fcntl.LOCK_NB)
         return False
     except OSError:
         return True
@@ -76,7 +66,7 @@ def already_running() -> bool:
 # ------------------------------------------------------------------ engine controls
 class Controller:
     """Turns the buddy on/off and applies voice / idle-time picks. Slow work runs on background threads;
-    `busy` is True while one is in flight. `ask_key` shows the platform's "paste your API key" prompt."""
+    `busy` is True while one is in flight. `ask_key` shows the "paste your API key" prompt."""
 
     def __init__(self, ask_key: Callable[[], Optional[str]]) -> None:
         self.prefs = load_prefs()
