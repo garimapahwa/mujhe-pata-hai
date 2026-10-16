@@ -12,7 +12,7 @@ import re
 import subprocess
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -25,30 +25,34 @@ _DISTRACTION_SITES = {
     "zomato.com": "Zomato", "spotify.com": "Spotify", "linkedin.com": "LinkedIn",
 }
 _DISTRACTION_APPS = {"WhatsApp", "Spotify", "Music", "TV", "Netflix", "Telegram", "Discord", "Messages", "Photos"}
+# Whole words only: "MIT" must not match "Amitabh", "maths" must not match "aftermath".
 _STUDY_RE = re.compile(
-    r"lecture|tutorial|course|class \d|lesson|explained|crash course|DSA|leetcode|interview prep|"
-    r"python|javascript|machine learning|maths?|physics|chemistry|NPTEL|MIT|Khan Academy|पढ़ाई",
+    r"\b(?:lectures?|tutorials?|courses?|class \d+|lessons?|explained|crash course|DSA|leetcode|interview prep|"
+    r"python|javascript|machine learning|maths?|physics|chemistry|NPTEL|MIT|Khan Academy)\b|पढ़ाई",
     re.I,
 )
 _BROWSERS = {"com.google.Chrome": "Google Chrome", "com.apple.Safari": "Safari"}
 
+# One line per visible window, front-most first: "<tab title>\t<URL>" of the tab showing in it.
 _SCRIPTS = {
     "com.google.Chrome": (
         'tell application "Google Chrome"\n'
-        "  set ws to (every window whose minimized is false)\n"
-        "  if (count of ws) > 0 then\n"
-        "    set t to active tab of (item 1 of ws)\n"
-        '    return (title of t) & "\\n" & (URL of t)\n'
-        "  end if\n"
+        '  set out to ""\n'
+        "  repeat with w in (every window whose minimized is false)\n"
+        "    set t to active tab of w\n"
+        '    set out to out & (title of t) & (character id 9) & (URL of t) & linefeed\n'
+        "  end repeat\n"
+        "  return out\n"
         "end tell"
     ),
     "com.apple.Safari": (
         'tell application "Safari"\n'
-        "  set ws to (every window whose miniaturized is false)\n"
-        "  if (count of ws) > 0 then\n"
-        "    set t to current tab of (item 1 of ws)\n"
-        '    return (name of t) & "\\n" & (URL of t)\n'
-        "  end if\n"
+        '  set out to ""\n'
+        "  repeat with w in (every window whose miniaturized is false)\n"
+        "    set t to current tab of w\n"
+        '    set out to out & (name of t) & (character id 9) & (URL of t) & linefeed\n'
+        "  end repeat\n"
+        "  return out\n"
         "end tell"
     ),
 }
@@ -104,7 +108,9 @@ def _front_app() -> tuple[str, str]:
     info = _run(["lsappinfo", "info", "-only", "name", "-only", "bundleid", asn])
     name = re.search(r'"(?:LSDisplayName|name)"="([^"]*)"', info)
     bundle = re.search(r'"CFBundleIdentifier"="([^"]*)"', info)
-    return (name.group(1) if name else ""), (bundle.group(1) if bundle else "")
+    # some apps (WhatsApp) prefix their name with an invisible left-to-right mark
+    clean = re.sub(r"[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]", "", name.group(1)).strip() if name else ""
+    return clean, (bundle.group(1) if bundle else "")
 
 
 def _is_running(bundle: str) -> bool:
@@ -112,10 +118,22 @@ def _is_running(bundle: str) -> bool:
 
 
 def _browser_tab(bundle: str, background: bool) -> ScreenContext:
-    out = _run(["osascript", "-e", _SCRIPTS[bundle]])
-    title, _, url = out.partition("\n")
-    domain = (urlparse(url).hostname or "").removeprefix("www.").removeprefix("m.")
-    return ScreenContext(app=_BROWSERS[bundle], title=title.strip(), domain=domain, background=background)
+    """The front window's tab, unless another visible window (e.g. on the second monitor) shows a distraction."""
+    tabs = []
+    for line in _run(["osascript", "-e", _SCRIPTS[bundle]]).splitlines():
+        if not line.strip():
+            continue
+        title, _, url = line.partition("\t")
+        domain = (urlparse(url.strip()).hostname or "").removeprefix("www.").removeprefix("m.")
+        tabs.append(ScreenContext(app=_BROWSERS[bundle], title=title.strip(), domain=domain, background=background))
+    if not tabs:
+        return ScreenContext(app=_BROWSERS[bundle], background=background)
+    if tabs[0].distraction:
+        return tabs[0]
+    for other in tabs[1:]:
+        if other.distraction:
+            return replace(other, background=True)
+    return tabs[0]
 
 
 def get_screen_context() -> ScreenContext:
