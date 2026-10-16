@@ -22,6 +22,7 @@ VOICE_GROUPS = {
     "Family": ["mummy", "papa", "dadi", "didi"],
     "Friends & Work": ["dost", "teacher", "boss"],
     "Filmy": ["filmy", "action", "detective", "news", "commentator"],
+    "Bollywood": ["angry", "romantic", "bhai", "villain", "coach"],
 }
 IDLE_CHOICES = {8: "8 seconds", 30: "30 seconds", 60: "1 minute", 120: "2 minutes", 300: "5 minutes",
                 600: "10 minutes", 900: "15 minutes", 1800: "30 minutes"}

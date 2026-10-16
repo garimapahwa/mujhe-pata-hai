@@ -22,9 +22,9 @@
   .bar b { position: absolute; left: 0; right: 0; text-align: center; font-weight: 600; font-size: 13px; pointer-events: none; }
 
   /* the "desktop": a fixed 640x400 stage, scaled to fit */
-  .screen { position: relative; aspect-ratio: 16 / 10; overflow: hidden; border-bottom: 2px solid var(--navy);
+  .screen { position: relative; aspect-ratio: 640 / 470; overflow: hidden; border-bottom: 2px solid var(--navy);
     background: radial-gradient(120% 90% at 15% 100%, var(--peach) 0%, transparent 55%), linear-gradient(160deg, var(--rose) 0%, var(--pink) 60%, #c86a76 100%); }
-  .stage { position: absolute; left: 0; top: 0; width: 640px; height: 400px; transform-origin: 0 0; }
+  .stage { position: absolute; left: 0; top: 0; width: 640px; height: 470px; transform-origin: 0 0; }
 
   .menubar { height: 24px; display: flex; justify-content: flex-end; align-items: center; gap: 14px; padding: 0 12px;
     background: rgba(241, 233, 226, .55); backdrop-filter: blur(8px); font-size: 12px; font-weight: 500; }
@@ -35,8 +35,8 @@
   .menu, .sub { position: absolute; background: rgba(246, 240, 235, .96); border: 1.5px solid var(--navy); border-radius: 9px; padding: 5px;
     box-shadow: 3px 3px 0 rgba(46, 44, 69, .9); font: 11.5px ui-rounded, "SF Pro Rounded", -apple-system, sans-serif; }
   .menu { top: 30px; right: 56px; width: 196px; }
-  .sub { top: 66px; right: 256px; width: 150px; }
-  .sub .row { height: 19px; } .sub .label { padding-top: 3px; }
+  .sub { top: 30px; right: 256px; width: 150px; }
+  .sub .row { height: 17px; } .sub .label { padding-top: 3px; }
   .row { display: flex; align-items: center; justify-content: space-between; height: 22px; padding: 0 8px 0 18px; border-radius: 5px; position: relative; cursor: default; }
   .row.head { height: 30px; padding-left: 8px; font-weight: 700; }
   .row.hl { background: var(--navy); color: var(--cream); }
@@ -106,6 +106,12 @@
               detective: ["Detective", "एक नया case… एक laptop… और एक suspect। मैं सब देख रहा हूँ।"],
               news: ["News Anchor", "नमस्कार! आप देख रहे हैं Focus Live। आज की सबसे बड़ी ख़बर, आप।"],
               commentator: ["Commentator", "नमस्कार दर्शकों! आज का match है, focus versus phone। Live commentary शुरू!"] },
+    Bollywood: {
+              angry: ["Angry Young Man", "आज मेरे पास laptop है, deadline है… तुम्हारे पास क्या है? मुझे पता है।"],
+              romantic: ["Romantic Hero", "बड़े-बड़े शहरों में, ऐसी छोटी-छोटी reels चलती रहती हैं… पर deadline, एक ही होती है।"],
+              bhai: ["Bhai", "थप्पड़ से डर नहीं लगता साहब… deadline से लगता है। Phone नीचे।"],
+              villain: ["Villain", "Mogambo ख़ुश हुआ! Phone उठाओ… और deadline को हारते देखो। हा हा हा!"],
+              coach: ["Cricket Coach", "सत्तर minute हैं तुम्हारे पास… शायद ज़िंदगी के सबसे ख़ास सत्तर minute। Phone, बाहर!"] },
   };
   const $ = id => document.getElementById(id);
   const audio = new Audio(), line = $("line"), list = $("voices"), sw = $("sw"), eye = $("eye");

@@ -23,7 +23,7 @@ Built for the **Sarvam Bulbul Build Challenge**. It uses only Sarvam AI models: 
 - **Sees what's on screen.** It reads the focused app and the active Chrome/Safari tab, names what you're watching, and catches lies. It works across a second monitor too.
 - **Can't be fooled by mouse wiggling.** Scrolling YouTube counts as distraction. Only activity in a work app (VS Code, Terminal, docs…) counts as being back.
 - **Escalates with voice prosody.** Three levels using Bulbul's pace, pitch and loudness: teasing → annoyed → *full drama*.
-- **Twelve characters.** Mummy, Papa, Dadi, Didi, a Gen-Z dost, a class teacher, a corporate boss, a filmy narrator, an action hero, a detective, a news anchor and a cricket commentator (all original, no celebrity voices).
+- **Seventeen characters.** Mummy, Papa, Dadi, Didi, a Gen-Z dost, a class teacher, a corporate boss, a filmy narrator, an action hero, a detective, a news anchor, a cricket commentator, and a Bollywood set (Angry Young Man, Romantic Hero, Bhai, Villain, Cricket Coach) that twists famous film dialogues into scoldings. All voices are Bulbul's own; no celebrity voices or names.
 - **Lives in the menu bar.** An eye icon that starts with your Mac and stays until you quit. Click it for an on/off switch, a voice picker, how long you can stay idle before a reminder (8 seconds to 30 minutes; YouTube or Netflix in front of you is caught within 30 seconds), Launch at Login and Quit.
 - **Fast.** The first audio plays in about 100–200 ms, and common lines are pre-cached so the first nag is instant.
 - **Never goes silent.** If the LLM is slow or down, a local keyword classifier and built-in line banks take over.
@@ -120,6 +120,11 @@ Press **Ctrl+C** to quit.
 | `boss` | `aditya_hi_sales` | Corporate jargon. *"Hi, quick sync? Keyboard पे कोई activity नहीं दिख रही।"* |
 | `news` | `simran_hi_news_breaking` | Breaking news. *"देश जानना चाहता है, phone क्यों?"* |
 | `detective` | `mukul_hi_suspense` | Slow suspense. *"सन्नाटा… keyboard ख़ामोश… और एक phone, जो अभी भी गर्म है।"* |
+| `angry` | `mahesh_hi_documentary` (pitched down) | Bollywood angry young man. *"आज मेरे पास laptop है, deadline है… तुम्हारे पास क्या है?"* |
+| `romantic` | `rehan_hi_social` | Bollywood romantic hero. *"पलट… पलट… laptop की तरफ़ पलट!"* |
+| `bhai` | `vipul_hi_social` | Bollywood bhai. *"थप्पड़ से डर नहीं लगता साहब… deadline से लगता है।"* |
+| `villain` | `advait_hi_character` | Bollywood villain. *"Mogambo ख़ुश हुआ! Keyboard बंद, phone चालू। हा हा हा!"* |
+| `coach` | `sumit_hi_conversational` | Cricket coach. *"सत्तर minute हैं तुम्हारे पास… Phone रखो।"* |
 
 Voices are checked at startup. If Sarvam ever retires one, the app automatically picks the closest available voice (same language and style). To change a voice, edit `speakers` for that persona in `config.py`.
 
