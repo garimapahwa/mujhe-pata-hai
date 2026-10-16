@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 import config
+from config import PERSONAS
 from engine import Engine
 from sarvam_client import SarvamClient, SarvamError
 
@@ -21,8 +22,7 @@ DEFAULT_PREFS: dict[str, Any] = {"persona": "mummy", "idle": 8, "volume": 1.0, "
 VOICE_GROUPS = {
     "Family": ["mummy", "papa", "dadi", "didi"],
     "Friends & Work": ["dost", "teacher", "boss"],
-    "Filmy": ["filmy", "action", "detective", "news", "commentator"],
-    "Bollywood": ["angry", "romantic", "bhai", "villain", "coach"],
+    "Filmy": ["angry", "romantic", "bhai", "villain", "detective", "news", "commentator"],
 }
 IDLE_CHOICES = {8: "8 seconds", 30: "30 seconds", 60: "1 minute", 120: "2 minutes", 300: "5 minutes",
                 600: "10 minutes", 900: "15 minutes", 1800: "30 minutes"}
@@ -31,9 +31,12 @@ IDLE_CHOICES = {8: "8 seconds", 30: "30 seconds", 60: "1 minute", 120: "2 minute
 # ------------------------------------------------------------------ prefs / key
 def load_prefs() -> dict[str, Any]:
     try:
-        return {**DEFAULT_PREFS, **json.loads(PREFS_PATH.read_text())}
+        prefs = {**DEFAULT_PREFS, **json.loads(PREFS_PATH.read_text())}
     except (OSError, ValueError):
         return dict(DEFAULT_PREFS)
+    if prefs["persona"] not in PERSONAS:  # a voice that has since been removed
+        prefs["persona"] = DEFAULT_PREFS["persona"]
+    return prefs
 
 
 def save_prefs(prefs: dict[str, Any]) -> None:
