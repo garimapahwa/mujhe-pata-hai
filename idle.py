@@ -1,9 +1,13 @@
-"""macOS system idle time via `ioreg` (HIDIdleTime). No Accessibility permission needed."""
+"""System idle time (seconds since the last keyboard/mouse event). No special permission needed.
+
+macOS: `ioreg` HIDIdleTime.  Windows: GetLastInputInfo.
+"""
 
 from __future__ import annotations
 
 import re
 import subprocess
+import sys
 import threading
 import time
 from typing import Callable
@@ -11,8 +15,7 @@ from typing import Callable
 _IDLE_RE = re.compile(rb'"HIDIdleTime"\s*=\s*(\d+)')
 
 
-def get_idle_seconds() -> float:
-    """Seconds since the last keyboard/mouse event. Returns 0.0 if ioreg fails."""
+def _mac_idle_seconds() -> float:
     try:
         out = subprocess.run(
             ["ioreg", "-c", "IOHIDSystem", "-d", "4"],
@@ -24,6 +27,24 @@ def get_idle_seconds() -> float:
         return 0.0
     match = _IDLE_RE.search(out)
     return int(match.group(1)) / 1e9 if match else 0.0
+
+
+def _windows_idle_seconds() -> float:
+    import ctypes
+
+    class LASTINPUTINFO(ctypes.Structure):
+        _fields_ = [("cbSize", ctypes.c_uint), ("dwTime", ctypes.c_uint)]
+
+    info = LASTINPUTINFO(cbSize=ctypes.sizeof(LASTINPUTINFO))
+    if not ctypes.windll.user32.GetLastInputInfo(ctypes.byref(info)):
+        return 0.0
+    now = ctypes.windll.kernel32.GetTickCount() & 0xFFFFFFFF
+    return ((now - info.dwTime) & 0xFFFFFFFF) / 1000.0  # both wrap every ~49 days
+
+
+def get_idle_seconds() -> float:
+    """Seconds since the last keyboard/mouse event. Returns 0.0 if it can't be read."""
+    return _windows_idle_seconds() if sys.platform == "win32" else _mac_idle_seconds()
 
 
 class IdleMonitor(threading.Thread):

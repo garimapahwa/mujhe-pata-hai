@@ -57,7 +57,10 @@
   .cmd { display: block; width: 100%; border: 2px solid var(--navy); border-radius: 8px; background: var(--cream); color: var(--navy); padding: 10px 12px;
     font: 12.5px ui-monospace, Menlo, monospace; text-align: left; white-space: nowrap; overflow-x: auto; cursor: pointer; scrollbar-width: none; transition: transform .1s; }
   .cmd:active { transform: translate(1px, 1px); }
-  .cmd::before { content: "$ "; opacity: .45; }
+  .cmd::before { content: attr(data-prompt); opacity: .45; }
+  .os { display: flex; gap: 4px; margin-bottom: 8px; }
+  .os button { border: 1.5px solid transparent; border-radius: 6px; background: none; color: var(--navy); padding: 3px 9px; font: 600 12px -apple-system, BlinkMacSystemFont, sans-serif; opacity: .5; cursor: pointer; }
+  .os button.on { border-color: var(--navy); background: var(--cream); opacity: 1; }
 </style>
 </head>
 <body>
@@ -90,7 +93,10 @@
         </div>
       </div>
     </div>
-    <div class="foot"><button class="cmd" id="cmd" title="Click to copy">curl -fsSL https://garimapahwa.github.io/side-eye/install.sh | bash</button></div>
+    <div class="foot">
+      <div class="os" id="os"><button data-os="mac" class="on">macOS</button><button data-os="win">Windows</button></div>
+      <button class="cmd" id="cmd" title="Click to copy" data-prompt="$ ">curl -fsSL https://garimapahwa.github.io/side-eye/install.sh | bash</button>
+    </div>
   </div>
 <script>
   const VOICES = {
@@ -141,9 +147,23 @@
   const fit = () => { $("stage").style.transform = `scale(${$("screen").clientWidth / 640})`; };
   new ResizeObserver(fit).observe($("screen")); fit();
 
-  const cmd = $("cmd"), text = cmd.textContent;
+  // install command per OS: Terminal on macOS, PowerShell on Windows
+  const INSTALL = {
+    mac: { cmd: "curl -fsSL https://garimapahwa.github.io/side-eye/install.sh | bash", prompt: "$ ", app: "Terminal" },
+    win: { cmd: "irm https://garimapahwa.github.io/side-eye/install.ps1 | iex", prompt: "PS> ", app: "PowerShell" },
+  };
+  const cmd = $("cmd");
+  let os = /Win/i.test(navigator.userAgentData?.platform || navigator.platform || navigator.userAgent) ? "win" : "mac";
+  function showOs(o) {
+    os = o;
+    cmd.textContent = INSTALL[o].cmd; cmd.dataset.prompt = INSTALL[o].prompt;
+    document.querySelectorAll("#os button").forEach(b => b.classList.toggle("on", b.dataset.os === o));
+  }
+  $("os").addEventListener("click", e => { const b = e.target.closest("button"); if (b) showOs(b.dataset.os); });
+  showOs(os);
   cmd.addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(text); cmd.textContent = "copied, paste it in Terminal"; setTimeout(() => (cmd.textContent = text), 1500); } catch {}
+    const { cmd: text, app } = INSTALL[os];
+    try { await navigator.clipboard.writeText(text); cmd.textContent = `copied, paste it in ${app}`; setTimeout(() => (cmd.textContent = text), 1500); } catch {}
   });
 </script>
 </body>

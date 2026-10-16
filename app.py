@@ -5,12 +5,8 @@ Run: python app.py          (use --on to start switched on)
 
 from __future__ import annotations
 
-import fcntl
-import json
-import os
 import plistlib
 import sys
-import threading
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -39,45 +35,12 @@ from PyObjCTools import AppHelper
 
 import config
 from config import PERSONAS
-from engine import Engine
-from sarvam_client import SarvamClient, SarvamError
+from controller import APP_NAME, IDLE_CHOICES, VOICE_GROUPS, Controller, already_running, save_prefs
 
-APP_NAME = "Side Eye"
-SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "SideEye"
-PREFS_PATH = SUPPORT_DIR / "prefs.json"
 LOGIN_AGENT = Path.home() / "Library" / "LaunchAgents" / "com.sideeye.agent.plist"
 STATUS_NAME = "SideEye"
-DEFAULT_PREFS: dict[str, Any] = {"persona": "mummy", "idle": 8, "volume": 1.0, "screen": True, "enabled": False}
 MENU_WIDTH = 210
 MENU_FONT = 11.5  # smaller than the default, so rows and their hover highlight are shorter
-VOICE_GROUPS = {
-    "Family": ["mummy", "papa", "dadi", "didi"],
-    "Friends & Work": ["dost", "teacher", "boss"],
-    "Filmy": ["filmy", "action", "detective", "news", "commentator"],
-}
-IDLE_CHOICES = {8: "8 seconds", 30: "30 seconds", 60: "1 minute", 120: "2 minutes", 300: "5 minutes",
-                600: "10 minutes", 900: "15 minutes", 1800: "30 minutes"}
-
-
-# ------------------------------------------------------------------ prefs / key
-def load_prefs() -> dict[str, Any]:
-    try:
-        return {**DEFAULT_PREFS, **json.loads(PREFS_PATH.read_text())}
-    except (OSError, ValueError):
-        return dict(DEFAULT_PREFS)
-
-
-def save_prefs(prefs: dict[str, Any]) -> None:
-    PREFS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    PREFS_PATH.write_text(json.dumps(prefs, indent=2))
-
-
-def save_api_key(key: str) -> None:
-    env = config.ROOT / ".env"
-    lines = env.read_text().splitlines() if env.exists() else []
-    lines = [l for l in lines if not l.startswith("SARVAM_API_KEY=")] + [f"SARVAM_API_KEY={key}"]
-    env.write_text("\n".join(lines) + "\n")
-    os.environ["SARVAM_API_KEY"] = key
 
 
 # ------------------------------------------------------------------ launch at login / icon position
@@ -160,13 +123,10 @@ def eye_icon() -> NSImage:
 # ------------------------------------------------------------------ app
 class MenuBarApp:
     def __init__(self) -> None:
-        self.prefs = load_prefs()
-        self.client: Optional[SarvamClient] = None
-        self.engine: Optional[Engine] = None
-        self.busy = False
+        self.ctl = Controller(self.ask_api_key)
         self._actions: list[_Action] = []  # keep ObjC targets alive
 
-        place_icon_on_the_right(self.prefs)
+        place_icon_on_the_right(self.ctl.prefs)
         self.status_item = NSStatusBar.systemStatusBar().statusItemWithLength_(NSVariableStatusItemLength)
         self.status_item.setAutosaveName_(STATUS_NAME)
         self.status_item.button().setImage_(eye_icon())
@@ -245,93 +205,31 @@ class MenuBarApp:
         self.login_item.setState_(int(launch_at_login()))
 
     def on_quit(self) -> None:
-        if self.engine:
-            self.engine.stop()
+        self.ctl.stop()
         NSApplication.sharedApplication().terminate_(None)
 
     def _refresh_voice(self) -> None:
         for key, item in self.voice_items.items():
-            item.setState_(int(key == self.prefs["persona"]))
+            item.setState_(int(key == self.ctl.prefs["persona"]))
         for secs, item in self.idle_items.items():
-            item.setState_(int(secs == self.prefs["idle"]))
-
-    # ---------------------------------------------------------------- engine plumbing
-    @property
-    def running(self) -> bool:
-        return bool(self.engine and self.engine.running)
-
-    def _ensure_client(self) -> bool:
-        if self.client:
-            return True
-        try:
-            self.client = SarvamClient()
-            self.engine = Engine(self.client)
-            return True
-        except SarvamError:
-            return self.ask_api_key()
-
-    def _start_engine(self, hello: bool = True) -> None:
-        try:
-            p, idle = self.prefs["persona"], float(self.prefs["idle"])
-            mode = "demo" if idle < 60 else "real"  # short waits get the snappy demo timers for everything else too
-            self.engine.start(p, mode, screen=self.prefs["screen"], volume=self.prefs["volume"], log=lambda _m: None, idle=idle)
-            if hello:
-                self.engine.preview(p, self.prefs["volume"])  # she says hello, so you know it's on
-        except Exception:  # never let a background error kill the menu bar app
-            pass
-        finally:
-            self.busy = False
-
-    def turn_on(self) -> None:
-        if self.busy or self.running or not self._ensure_client():
-            self.switch.setState_(int(self.running))
-            return
-        self.prefs["enabled"] = True
-        save_prefs(self.prefs)
-        self.busy = True
-        threading.Thread(target=self._start_engine, daemon=True).start()
-
-    def turn_off(self) -> None:
-        self.prefs["enabled"] = False
-        save_prefs(self.prefs)
-        if self.engine:
-            self.engine.stop()
-
-    def on_pick_voice(self, key: str) -> None:
-        self.prefs["persona"] = key
-        save_prefs(self.prefs)
-        self._refresh_voice()
-        if self.busy or not self._ensure_client():
-            return
-        self.busy = True
-        if self.running:
-            threading.Thread(target=self._start_engine, daemon=True).start()  # restart with the new voice
-        else:
-            threading.Thread(target=self._preview, args=(key,), daemon=True).start()
-
-    def on_pick_idle(self, secs: int) -> None:
-        self.prefs["idle"] = secs
-        save_prefs(self.prefs)
-        self._refresh_voice()
-        if self.running and not self.busy:
-            self.busy = True
-            threading.Thread(target=self._start_engine, args=(False,), daemon=True).start()  # restart quietly
-
-    def _preview(self, key: str) -> None:
-        try:
-            self.engine.preview(key, self.prefs["volume"])
-        except Exception:
-            pass
-        finally:
-            self.busy = False
+            item.setState_(int(secs == self.ctl.prefs["idle"]))
 
     def on_switch(self, sender) -> None:
         if sender.state():
-            self.turn_on()
+            if not self.ctl.turn_on():
+                self.switch.setState_(0)
         else:
-            self.turn_off()
+            self.ctl.turn_off()
 
-    def ask_api_key(self) -> bool:
+    def on_pick_voice(self, key: str) -> None:
+        self.ctl.pick_voice(key)
+        self._refresh_voice()
+
+    def on_pick_idle(self, secs: int) -> None:
+        self.ctl.pick_idle(secs)
+        self._refresh_voice()
+
+    def ask_api_key(self) -> Optional[str]:
         NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
         alert = NSAlert.alloc().init()
         alert.setMessageText_("Sarvam AI API key")
@@ -343,35 +241,14 @@ class MenuBarApp:
         alert.setAccessoryView_(field)
         alert.window().setInitialFirstResponder_(field)
         if alert.runModal() != 1000:  # NSAlertFirstButtonReturn
-            return False
-        key = str(field.stringValue()).strip()
-        if not key:
-            return False
-        save_api_key(key)
-        try:
-            self.client = SarvamClient(key)
-            self.engine = Engine(self.client)
-            return True
-        except SarvamError:
-            return False
+            return None
+        return str(field.stringValue())
 
     # ---------------------------------------------------------------- main-thread tick
     def tick(self, _timer) -> None:
-        on = self.running or (self.busy and self.prefs.get("enabled"))
+        on = self.ctl.on
         self.switch.setState_(int(on))
         self.status_item.button().setAlphaValue_(1.0 if on else 0.45)  # dimmed eye when off
-
-
-def already_running() -> bool:
-    """Single instance: hold an exclusive lock for the app's lifetime."""
-    global _LOCK
-    SUPPORT_DIR.mkdir(parents=True, exist_ok=True)
-    _LOCK = open(SUPPORT_DIR / "app.lock", "w")
-    try:
-        fcntl.flock(_LOCK, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        return False
-    except OSError:
-        return True
 
 
 def main() -> None:
@@ -380,8 +257,8 @@ def main() -> None:
     app = NSApplication.sharedApplication()
     app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)  # menu bar only, no Dock icon
     menubar = MenuBarApp()
-    if "--on" in sys.argv or menubar.prefs.get("enabled"):
-        AppHelper.callLater(0.5, menubar.turn_on)
+    if "--on" in sys.argv or menubar.ctl.prefs.get("enabled"):
+        AppHelper.callLater(0.5, menubar.ctl.turn_on)
     AppHelper.runEventLoop()
 
 

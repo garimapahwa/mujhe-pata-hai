@@ -1,15 +1,18 @@
 """What's on screen — frontmost app + active browser tab title/domain. Text only, no screenshots.
 
-Frontmost app comes from `lsappinfo` (no permission). Browser tabs are read via AppleScript, only for
-browsers that are already running (so we never launch one). If the focused app isn't a browser we still
-check open, non-minimized Chrome/Safari windows — Netflix on a second monitor counts.
-macOS asks once for Automation access.
+macOS: frontmost app comes from `lsappinfo` (no permission). Browser tabs are read via AppleScript, only
+for browsers that are already running (so we never launch one). macOS asks once for Automation access.
+Windows: the focused window's title and program; browser titles carry the page title and site
+("… - YouTube - Google Chrome"). No permission needed.
+Either way, if the focused app isn't a browser we still check open, non-minimized browser windows —
+Netflix on a second monitor counts.
 """
 
 from __future__ import annotations
 
 import re
 import subprocess
+import sys
 import threading
 import time
 from dataclasses import dataclass
@@ -118,7 +121,7 @@ def _browser_tab(bundle: str, background: bool) -> ScreenContext:
     return ScreenContext(app=_BROWSERS[bundle], title=title.strip(), domain=domain, background=background)
 
 
-def get_screen_context() -> ScreenContext:
+def _mac_screen_context() -> ScreenContext:
     app, bundle = _front_app()
     if bundle in _BROWSERS:
         return _browser_tab(bundle, background=False)
@@ -132,6 +135,110 @@ def get_screen_context() -> ScreenContext:
             if tab.distraction:
                 return tab
     return front
+
+
+# ---------------------------------------------------------------- Windows
+_WIN_APPS = {
+    "chrome.exe": "Google Chrome", "msedge.exe": "Microsoft Edge", "firefox.exe": "Firefox", "brave.exe": "Brave",
+    "opera.exe": "Opera", "code.exe": "Code", "spotify.exe": "Spotify", "whatsapp.exe": "WhatsApp",
+    "telegram.exe": "Telegram", "discord.exe": "Discord",
+}
+_WIN_BROWSERS = {"Google Chrome", "Microsoft Edge", "Firefox", "Brave", "Opera"}
+_BROWSER_SUFFIX = re.compile(r"\s[-–—]\s(?:Google Chrome|Microsoft\u200b? Edge|Mozilla Firefox|Brave|Opera)$")
+_EDGE_PROFILE = re.compile(r"(?:\s(?:and \d+ more pages?))?\s[-–—]\s(?:Personal|Work|InPrivate|Profile \d+)$")
+# The site name usually ends the page title ("… - YouTube", "… • Instagram") or is the whole title ("Netflix").
+_TITLE_SITES = {
+    "YouTube": "youtube.com", "Netflix": "netflix.com", "Instagram": "instagram.com", "Hotstar": "hotstar.com",
+    "Prime Video": "primevideo.com", "JioCinema": "jiocinema.com", "Reddit": "reddit.com", "Facebook": "facebook.com",
+    "WhatsApp": "web.whatsapp.com", "Snapchat": "snapchat.com", "TikTok": "tiktok.com", "Myntra": "myntra.com",
+    "Flipkart": "flipkart.com", "Swiggy": "swiggy.com", "Zomato": "zomato.com", "Spotify": "spotify.com",
+    "LinkedIn": "linkedin.com",
+}
+
+
+def _site_from_title(page: str) -> str:
+    for name, domain in _TITLE_SITES.items():
+        if re.search(rf"(?:^|[\s\-–—|•·:/])\s*{re.escape(name)}\s*$|^{re.escape(name)}\b", page, re.I):
+            return domain
+    return ""
+
+
+def _win_window(hwnd: int) -> tuple[str, str]:
+    """(app name, window title) for a window handle."""
+    import ctypes
+
+    user32, kernel32 = ctypes.windll.user32, ctypes.windll.kernel32
+    n = user32.GetWindowTextLengthW(hwnd)
+    buf = ctypes.create_unicode_buffer(n + 1)
+    user32.GetWindowTextW(hwnd, buf, n + 1)
+    pid = ctypes.c_ulong()
+    user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+    exe = ""
+    handle = kernel32.OpenProcess(0x1000, False, pid.value)  # PROCESS_QUERY_LIMITED_INFORMATION
+    if handle:
+        size = ctypes.c_ulong(1024)
+        path = ctypes.create_unicode_buffer(1024)
+        if kernel32.QueryFullProcessImageNameW(handle, 0, path, ctypes.byref(size)):
+            exe = path.value.rsplit("\\", 1)[-1].lower()
+        kernel32.CloseHandle(handle)
+    if exe == "applicationframehost.exe":  # Store apps (WhatsApp, Netflix…) are hosted; the title is the app
+        return buf.value, buf.value
+    return _WIN_APPS.get(exe, exe.removesuffix(".exe").capitalize()), buf.value
+
+
+def _win_context(hwnd: int, background: bool) -> ScreenContext:
+    app, title = _win_window(hwnd)
+    if app not in _WIN_BROWSERS:
+        return ScreenContext(app=app, background=background)
+    page = _EDGE_PROFILE.sub("", _BROWSER_SUFFIX.sub("", title)).strip()
+    return ScreenContext(app=app, title=page, domain=_site_from_title(page), background=background)
+
+
+def _win_visible_browser_windows() -> list[int]:
+    """Top-level browser windows that are actually on screen (not minimized, not on another desktop)."""
+    import ctypes
+    from ctypes import wintypes
+
+    user32 = ctypes.windll.user32
+    found: list[int] = []
+
+    def visit(hwnd: int, _lparam: int) -> bool:
+        if user32.IsWindowVisible(hwnd) and not user32.IsIconic(hwnd) and user32.GetWindowTextLengthW(hwnd):
+            cloaked = ctypes.c_int(0)
+            ctypes.windll.dwmapi.DwmGetWindowAttribute(hwnd, 14, ctypes.byref(cloaked), ctypes.sizeof(cloaked))  # DWMWA_CLOAKED
+            if not cloaked.value and _win_window(hwnd)[0] in _WIN_BROWSERS:
+                found.append(hwnd)
+        return True
+
+    user32.EnumWindows(ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)(visit), 0)
+    return found
+
+
+def _windows_screen_context() -> ScreenContext:
+    import ctypes
+
+    hwnd = ctypes.windll.user32.GetForegroundWindow()
+    if not hwnd:
+        return ScreenContext(app="")
+    front = _win_context(hwnd, background=False)
+    if front.app in _WIN_BROWSERS or front.distraction:
+        return front
+    for other in _win_visible_browser_windows():
+        tab = _win_context(other, background=True)
+        if tab.distraction:
+            return tab
+    return front
+
+
+def get_screen_context() -> ScreenContext:
+    try:
+        if sys.platform == "win32":
+            return _windows_screen_context()
+        if sys.platform == "darwin":
+            return _mac_screen_context()
+    except Exception:  # screen reading is a bonus; never let it break the buddy
+        pass
+    return ScreenContext(app="")
 
 
 class ScreenWatcher(threading.Thread):

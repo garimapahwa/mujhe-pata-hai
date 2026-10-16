@@ -2,13 +2,18 @@
 
 *"मुझे पता है।"*
 
-**A voice focus buddy for macOS. It catches you slacking, nags you in Hinglish, listens to your excuse, and talks back.**
+**A voice focus buddy for macOS and Windows. It catches you slacking, nags you in Hinglish, listens to your excuse, and talks back.**
 
 **Website:** https://garimapahwa.github.io/side-eye · _Demo video: coming soon_ <!-- drop demo.gif / YouTube link here -->
 
 ```bash
-# install (macOS, no admin password) — the eye icon appears in your menu bar
+# macOS (Terminal, no admin password): the eye icon appears in your menu bar
 curl -fsSL https://garimapahwa.github.io/side-eye/install.sh | bash
+```
+
+```powershell
+# Windows (PowerShell, no admin rights): the eye appears in the system tray, by the clock
+irm https://garimapahwa.github.io/side-eye/install.ps1 | iex
 ```
 
 Go idle while you're supposed to be working and an Indian mummy calls you out, out loud. Answer her ("nahi nahi, padh rahi hoon") and she *understands* you, stays suspicious, and comes back later asking whether that reading is done yet. Claim you're studying while Taarak Mehta is playing in Chrome and she checks your screen: *"पढ़ाई? Screen पे तो Taarak Mehta चल रहा है! मुझे सब पता है।"* Stay silent and she gets louder, faster and more dramatic. Get back to real work and she stops mid-sentence: *"आ गई? Good. काम करो।"*
@@ -24,21 +29,24 @@ Built for the **Sarvam Bulbul Build Challenge**. It uses only Sarvam AI models: 
 - **Can't be fooled by mouse wiggling.** Scrolling YouTube counts as distraction. Only activity in a work app (VS Code, Terminal, docs…) counts as being back.
 - **Escalates with voice prosody.** Three levels using Bulbul's pace, pitch and loudness: teasing → annoyed → *full drama*.
 - **Twelve characters.** Mummy, Papa, Dadi, Didi, a Gen-Z dost, a class teacher, a corporate boss, a filmy narrator, an action hero, a detective, a news anchor and a cricket commentator (all original, no celebrity voices).
-- **Lives in the menu bar.** An eye icon that starts with your Mac and stays until you quit. Click it for an on/off switch, a voice picker, how long you can stay idle before a reminder (8 seconds to 30 minutes), Launch at Login and Quit.
+- **Lives in the menu bar (macOS) or the system tray (Windows).** An eye icon that starts with your computer and stays until you quit. Click it for an on/off switch, a voice picker, how long you can stay idle before a reminder (8 seconds to 30 minutes), Launch at Login and Quit.
 - **Fast.** The first audio plays in about 100–200 ms, and common lines are pre-cached so the first nag is instant.
 - **Never goes silent.** If the LLM is slow or down, a local keyword classifier and built-in line banks take over.
 - **Live terminal dashboard.** It shows state, idle and distraction timers, escalation level, what you said, detected intent, latency and a session tally.
 
 ## Requirements
 
-- **macOS.** Idle and screen detection use macOS tools.
+- **macOS or Windows 10/11.**
 - **Python 3.11+**
 - A **Sarvam AI API key**, free to start, from [dashboard.sarvam.ai](https://dashboard.sarvam.ai)
 - Speakers and a microphone. The built-in ones work fine.
 
 ## Quick start
 
-**Easiest:** run the one-line installer above. It sets up Python, downloads the app, asks for your key and puts **Side Eye.app** in `~/Applications`. Run it again to update; add `-s -- --uninstall` after `bash` to remove it.
+**Easiest:** run the one-line installer above. It sets up Python, downloads the app and asks for your key.
+
+- **macOS** puts **Side Eye.app** in `~/Applications`. Run it again to update; add `-s -- --uninstall` after `bash` to remove it.
+- **Windows** adds **Side Eye** to the Start menu and to Startup apps. Run it again to update; to remove it, run `$env:SIDEEYE_UNINSTALL=1; irm https://garimapahwa.github.io/side-eye/install.ps1 | iex`. On Windows 11 the tray eye may start under the **^** arrow; drag it onto the taskbar to keep it visible.
 
 **From source:**
 
@@ -49,7 +57,7 @@ cd side-eye
 
 # 2. Create a virtual environment and install dependencies
 python3.11 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 # 3. Add your Sarvam API key
@@ -57,7 +65,8 @@ cp .env.example .env
 #    open .env and set:  SARVAM_API_KEY=sk_...
 
 # 4. Run it
-python app.py     # menu bar app (eye icon + on/off switch)
+python app.py     # macOS menu bar app (eye icon + on/off switch)
+pythonw tray.py   # Windows tray app (same menu)
 python main.py    # or: terminal version with the full dashboard
 ```
 
@@ -197,20 +206,22 @@ python -m screen          # what the app sees (app + tab), flags distractions
 
 ## Website
 
-The landing page lives in [`docs/`](docs) and is served by GitHub Pages: a one-screen `index.html` with the install command, and the installer `docs/install.sh`.
+The landing page lives in [`docs/`](docs) and is served by GitHub Pages and Vercel: a one-screen `index.html` with the install commands, and the installers `docs/install.sh` (macOS) and `docs/install.ps1` (Windows).
 
 ## Project layout
 
 ```
-app.py            menu bar app: eye icon, menu with just an on/off switch
+app.py            macOS menu bar app: eye icon, switch, voices, remind after
+tray.py           Windows tray app with the same menu
+controller.py     what both share: settings, API key, on/off, voice and idle-time picks
 engine.py         starts/stops the pipeline; voice validation and cache warm-up
 main.py           terminal version with the rich dashboard
 config.py         modes and timers, prosody levels, model IDs, personas
 brain.py          state machine, intents, escalation, lie detection, TTS cache
 sarvam_client.py  Bulbul streaming TTS, Saaras STT, LLM (timeouts, retries)
 audio.py          interruptible streaming playback, mic recording + voice detection
-idle.py           macOS idle time (HIDIdleTime)
-screen.py         focused app + browser tab, distraction detection, background watcher
+idle.py           idle time (macOS HIDIdleTime, Windows GetLastInputInfo)
+screen.py         focused app + browser tab (AppleScript on macOS, window titles on Windows), distraction detection
 lines.py          fallback line banks per persona / intent / level
 ui.py             rich live dashboard
 ```
