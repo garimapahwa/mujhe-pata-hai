@@ -109,13 +109,14 @@ class Engine:
         self, persona_key: str, mode: str, screen: bool = True, volume: float = 1.0, log: LogFn = print,
         idle: Optional[float] = None,
     ) -> Status:
-        """`idle` (seconds) overrides how long you can sit idle before the first nag."""
+        """`idle` (seconds) overrides how long you can sit idle before the first nag. A distraction in front of
+        you (YouTube, Netflix…) gets the same grace, capped at 30 s so it is caught quickly."""
         with self._lock:
             self.stop()
             persona = PERSONAS[persona_key]
             timings = config.timings_for(mode)
             if idle:
-                timings = dataclasses.replace(timings, idle_threshold=idle)
+                timings = dataclasses.replace(timings, idle_threshold=idle, distraction_grace=min(idle, 30.0))
             status = Status(persona=persona, mode=mode, timings=timings)
             status.speaker = self.speaker_for(persona, log)
             voice = Voice(self.client, status.speaker, status)

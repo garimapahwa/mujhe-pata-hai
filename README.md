@@ -24,7 +24,7 @@ Built for the **Sarvam Bulbul Build Challenge**. It uses only Sarvam AI models: 
 - **Can't be fooled by mouse wiggling.** Scrolling YouTube counts as distraction. Only activity in a work app (VS Code, Terminal, docs…) counts as being back.
 - **Escalates with voice prosody.** Three levels using Bulbul's pace, pitch and loudness: teasing → annoyed → *full drama*.
 - **Twelve characters.** Mummy, Papa, Dadi, Didi, a Gen-Z dost, a class teacher, a corporate boss, a filmy narrator, an action hero, a detective, a news anchor and a cricket commentator (all original, no celebrity voices).
-- **Lives in the menu bar.** An eye icon that starts with your Mac and stays until you quit. Click it for an on/off switch, a voice picker, how long you can stay idle before a reminder (8 seconds to 30 minutes), Launch at Login and Quit.
+- **Lives in the menu bar.** An eye icon that starts with your Mac and stays until you quit. Click it for an on/off switch, a voice picker, how long you can stay idle before a reminder (8 seconds to 30 minutes; YouTube or Netflix in front of you is caught within 30 seconds), Launch at Login and Quit.
 - **Fast.** The first audio plays in about 100–200 ms, and common lines are pre-cached so the first nag is instant.
 - **Never goes silent.** If the LLM is slow or down, a local keyword classifier and built-in line banks take over.
 - **Live terminal dashboard.** It shows state, idle and distraction timers, escalation level, what you said, detected intent, latency and a session tally.
