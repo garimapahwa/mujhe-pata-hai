@@ -193,7 +193,7 @@ class MenuBarApp:
         self.switch.setTarget_(self._target(self.on_switch))
         self.switch.setAction_("fire:")
         head.addSubview_(self.switch)
-        item = NSMenuItem.alloc().init()
+        item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(APP_NAME, None, "")  # title is for VoiceOver; the view draws the row
         item.setView_(head)
         menu = submenu()
         menu.addItem_(item)
